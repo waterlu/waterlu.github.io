@@ -1,0 +1,189 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="个人技术博客"><title>多线程(3) ThreadPoolExecutor | Waterlu's Blog</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/8.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">多线程(3) ThreadPoolExecutor</h1><a id="logo" href="/.">Waterlu's Blog</a><p class="description">小桥流水人家</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">多线程(3) ThreadPoolExecutor</h1><div class="post-meta">Apr 24, 2018<span> | </span><span class="category"><a href="/categories/并发编程/">并发编程</a></span><script src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><div class="clear"><div class="toc-article" id="toc"><div class="toc-title">文章目录</div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#原理"><span class="toc-number">1.</span> <span class="toc-text">原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造参数"><span class="toc-number">1.1.</span> <span class="toc-text">构造参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#处理流程"><span class="toc-number">1.2.</span> <span class="toc-text">处理流程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#基本逻辑"><span class="toc-number">1.2.1.</span> <span class="toc-text">基本逻辑</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#SynchronousQueue"><span class="toc-number">1.2.2.</span> <span class="toc-text">SynchronousQueue</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#ArrayBlockingQueue"><span class="toc-number">1.2.3.</span> <span class="toc-text">ArrayBlockingQueue</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#LinkedBlockingQueue"><span class="toc-number">1.2.4.</span> <span class="toc-text">LinkedBlockingQueue</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代码示例"><span class="toc-number">2.</span> <span class="toc-text">代码示例</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#背景"><span class="toc-number">2.1.</span> <span class="toc-text">背景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#测试结果"><span class="toc-number">2.2.</span> <span class="toc-text">测试结果</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#无界队列"><span class="toc-number">2.2.1.</span> <span class="toc-text">无界队列</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#有界队列"><span class="toc-number">2.2.2.</span> <span class="toc-text">有界队列</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#同步移交-Abort"><span class="toc-number">2.2.3.</span> <span class="toc-text">同步移交+Abort</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#同步移交-Discard"><span class="toc-number">2.2.4.</span> <span class="toc-text">同步移交+Discard</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#同步移交-CallerRun"><span class="toc-number">2.2.5.</span> <span class="toc-text">同步移交+CallerRun</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实战"><span class="toc-number">3.</span> <span class="toc-text">实战</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Executors"><span class="toc-number">3.1.</span> <span class="toc-text">Executors</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#核心线程数"><span class="toc-number">3.2.</span> <span class="toc-text">核心线程数</span></a></li></ol></li></ol></div></div><div class="post-content"><h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>理解了ThreadPoolExecutor类的各个参数和内部原理也就理解了线程池机制。</p>
+<h3 id="构造参数"><a href="#构造参数" class="headerlink" title="构造参数"></a>构造参数</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadPoolExecutor</span><span class="params">(<span class="keyword">int</span> corePoolSize, <span class="keyword">int</span> maximumPoolSize, <span class="keyword">long</span> keepAliveTime,</span></span></span><br><span class="line"><span class="function"><span class="params">		TimeUnit unit, BlockingQueue&lt;Runnable&gt; workQueue, </span></span></span><br><span class="line"><span class="function"><span class="params">		ThreadFactory threadFactory, RejectedExecutionHandler handler)</span> </span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>先来看ThreadPoolExecutor类的参数</p>
+<table>
+<thead>
+<tr>
+<th>参数名称</th>
+<th>含义</th>
+<th>详解</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>corePoolSize</td>
+<td>核心线程数</td>
+<td>当前线程数小于corePoolSize时，会一直创建新线程</td>
+</tr>
+<tr>
+<td>maximumPoolSize</td>
+<td>最大线程数</td>
+<td>最多可以创建maximumPoolSize个线程，超过进入饱和策略</td>
+</tr>
+<tr>
+<td>keepAliveTime</td>
+<td>空闲时间</td>
+<td>当超过corePoolSize时，回收线程时使用</td>
+</tr>
+<tr>
+<td>unit</td>
+<td>时间单位</td>
+<td>配合keepAliveTime一起使用</td>
+</tr>
+<tr>
+<td>workQueue</td>
+<td>排队策略</td>
+<td>最重要，排队策略决定了线程池的处理流程</td>
+</tr>
+<tr>
+<td>threadFactory</td>
+<td>工厂</td>
+<td>创建线程时进行自定义操作</td>
+</tr>
+<tr>
+<td>handler</td>
+<td>饱和策略</td>
+<td>配合workQueue使用，处理线程池满的情况</td>
+</tr>
+</tbody>
+</table>
+<h3 id="处理流程"><a href="#处理流程" class="headerlink" title="处理流程"></a>处理流程</h3><p><img src="/images/threadpool_threadpoolexecutor.png" alt="图1-线程池原理"></p>
+<h4 id="基本逻辑"><a href="#基本逻辑" class="headerlink" title="基本逻辑"></a>基本逻辑</h4><ul>
+<li>当线程池里面的线程数小于corePoolSize时，不管当前线程池中的线程是否空闲，都创建新的线程来执行任务，并加入到线程池中；这样随着任务的增加，线程池的线程数会达到corePoolSize个；</li>
+<li>达到corePoolSize后，当新任务到来时，会选择空闲的线程来执行；</li>
+<li>如果没有空闲线程，进入排队策略，不同的排队策略有不同逻辑；</li>
+<li>当核心线程空闲时，会从排队队列中取出任务来执行；</li>
+<li>当核心线程没有空闲，并且排队队列满时，创建新线程执行任务，最大不超过maximumPoolSize个；</li>
+<li>当达到maximumPoolSize个线程，且都在忙，新任务到来时进入饱和策略，不同的饱和策略有不同逻辑；如果没有配置饱和策略，抛出RejectedExecutionException异常；</li>
+<li>当线程数超过corePoolSize后，启动回收逻辑，空闲时间超过keepAliveTime的线程将被回收；回收时不区分核心线程和非核心线程，减少到corePoolSize个后不再回收。</li>
+</ul>
+<p>排队策略不同，处理流程也不同，下面分别介绍常见三种排队策略的处理流程：SynchronousQueue、ArrayBlockingQueue和LinkedBlockingQueue。</p>
+<h4 id="SynchronousQueue"><a href="#SynchronousQueue" class="headerlink" title="SynchronousQueue"></a>SynchronousQueue</h4><p>简单说就是没有排队队列，或者队列长度为0，所以通常使用SynchronousQueue作为排队策略时，为避免出现线程执行被拒绝的情况，maximumPoolSize的值会被设置的很大。</p>
+<div id="flowchart-0" class="flow-chart"></div>
+
+<h4 id="ArrayBlockingQueue"><a href="#ArrayBlockingQueue" class="headerlink" title="ArrayBlockingQueue"></a>ArrayBlockingQueue</h4><p>有界排队队列，必须设置队列长度；当线程数达到corePoolSize时，开始排队；当排队队列满时增加非核心线程直到maximumPoolSize。</p>
+<div id="flowchart-1" class="flow-chart"></div>
+
+<h4 id="LinkedBlockingQueue"><a href="#LinkedBlockingQueue" class="headerlink" title="LinkedBlockingQueue"></a>LinkedBlockingQueue</h4><p>LinkedBlockingQueue如果不指定队列大小，那么就是无界队列；除非系统资源耗尽，将无限增加队列长度，因此无界队列不存在队列满的情况，也就没有非核心线程、饱和逻辑和线程回收逻辑；也就是说当设置workQueue为LinkedBlockingQueue时，keepAliveTime、unit和handler三个参数失效。</p>
+<p>LinkedBlockingQueue也可以设置队列大小，就成了有界队列，和ArrayBlockingQueue的处理逻辑一样。</p>
+<div id="flowchart-2" class="flow-chart"></div>
+
+<h2 id="代码示例"><a href="#代码示例" class="headerlink" title="代码示例"></a>代码示例</h2><h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>每个任务开始时输出“run”，结束时输出“exit”，不做具体逻辑，只是sleep1秒钟。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Task</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        LOGGER.info(<span class="string">"run"</span>);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        LOGGER.info(<span class="string">"exit"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>主线程</p>
+<ul>
+<li>核心线程数2个，最大线程数4个，保活时间3秒</li>
+<li>依次启动6个任务，每启动一个任务后都输出线程池大小</li>
+<li>启动任务错误时输出异常信息</li>
+<li>6个任务都启动完成后sleep 5秒，退出前再次输出线程池大小</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadExecutor</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Logger LOGGER = LoggerFactory.getLogger(ThreadExecutor.class);</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> coreSize = <span class="number">2</span>;</span><br><span class="line">        <span class="keyword">int</span> maxSize = <span class="number">4</span>;</span><br><span class="line">        <span class="keyword">long</span> time = <span class="number">3</span>;</span><br><span class="line">        TimeUnit unit = TimeUnit.SECONDS;</span><br><span class="line">        ThreadPoolExecutor executor = <span class="keyword">new</span> ThreadPoolExecutor(coreSize, maxSize, </span><br><span class="line">        	time, unit, queue, handler);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;<span class="number">6</span>; i++) &#123;</span><br><span class="line">            Task task = <span class="keyword">new</span> Task();</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                executor.submit(task);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                LOGGER.error(e.getClass().getSimpleName());</span><br><span class="line">            &#125;</span><br><span class="line">            LOGGER.info(<span class="string">"poolSize="</span> + executor.getPoolSize());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Thread.sleep(<span class="number">5000</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        LOGGER.info(<span class="string">"poolSize="</span> + executor.getPoolSize());</span><br><span class="line">        LOGGER.info(<span class="string">"exit"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>下面看看不同的workQueue和handler配置下的输出结果</p>
+<h3 id="测试结果"><a href="#测试结果" class="headerlink" title="测试结果"></a>测试结果</h3><h4 id="无界队列"><a href="#无界队列" class="headerlink" title="无界队列"></a>无界队列</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">LinkedBlockingQueue&lt;Runnable&gt; queue = <span class="keyword">new</span> LinkedBlockingQueue&lt;&gt;();</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">10:57:33:055 [pool-2-thread-1] run</span><br><span class="line">10:57:33:055 [main] poolSize=1</span><br><span class="line">10:57:33:055 [main] poolSize=2</span><br><span class="line">10:57:33:055 [main] poolSize=2</span><br><span class="line">10:57:33:055 [pool-2-thread-2] run</span><br><span class="line">10:57:33:055 [main] poolSize=2</span><br><span class="line">10:57:33:055 [main] poolSize=2</span><br><span class="line">10:57:33:055 [main] poolSize=2</span><br><span class="line">10:57:34:068 [pool-2-thread-2] exit</span><br><span class="line">10:57:34:068 [pool-2-thread-1] exit</span><br><span class="line">10:57:34:068 [pool-2-thread-1] run</span><br><span class="line">10:57:34:068 [pool-2-thread-2] run</span><br><span class="line">10:57:35:081 [pool-2-thread-1] exit</span><br><span class="line">10:57:35:081 [pool-2-thread-2] exit</span><br><span class="line">10:57:35:081 [pool-2-thread-1] run</span><br><span class="line">10:57:35:081 [pool-2-thread-2] run</span><br><span class="line">10:57:36:082 [pool-2-thread-1] exit</span><br><span class="line">10:57:36:082 [pool-2-thread-2] exit</span><br><span class="line">10:57:38:056 [main] poolSize=2</span><br><span class="line">10:57:38:056 [main] exit</span><br></pre></td></tr></table></figure>
+<p>从日志中可以看出</p>
+<ul>
+<li>当线程池达到核心线程数2后，一直保持在核心线程数不变</li>
+<li>pool-2-thread-1和pool-2-thread-2顺序从队列中取出任务依次执行</li>
+</ul>
+<h4 id="有界队列"><a href="#有界队列" class="headerlink" title="有界队列"></a>有界队列</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">ArrayBlockingQueue&lt;Runnable&gt; queue = <span class="keyword">new</span> ArrayBlockingQueue&lt;&gt;(<span class="number">2</span>);</span><br><span class="line"><span class="comment">// LinkedBlockingQueue&lt;Runnable&gt; queue = new LinkedBlockingQueue&lt;&gt;(2);</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">11:01:23:147 [main] poolSize=1</span><br><span class="line">11:01:23:147 [pool-2-thread-1] run</span><br><span class="line">11:01:23:147 [main] poolSize=2</span><br><span class="line">11:01:23:147 [main] poolSize=2</span><br><span class="line">11:01:23:147 [pool-2-thread-2] run</span><br><span class="line">11:01:23:147 [main] poolSize=2</span><br><span class="line">11:01:23:147 [main] poolSize=3</span><br><span class="line">11:01:23:147 [main] poolSize=4</span><br><span class="line">11:01:23:147 [pool-2-thread-3] run</span><br><span class="line">11:01:23:147 [pool-2-thread-4] run</span><br><span class="line">11:01:24:147 [pool-2-thread-1] exit</span><br><span class="line">11:01:24:147 [pool-2-thread-1] run</span><br><span class="line">11:01:24:147 [pool-2-thread-2] exit</span><br><span class="line">11:01:24:147 [pool-2-thread-2] run</span><br><span class="line">11:01:24:147 [pool-2-thread-3] exit</span><br><span class="line">11:01:24:147 [pool-2-thread-4] exit</span><br><span class="line">11:01:25:158 [pool-2-thread-2] exit</span><br><span class="line">11:01:25:158 [pool-2-thread-1] exit</span><br><span class="line">11:01:28:154 [main] poolSize=2</span><br><span class="line">11:01:28:154 [main] exit</span><br></pre></td></tr></table></figure>
+<p>从日志中可以看出</p>
+<ul>
+<li>当队列（2个）满以后，增加了非核心线程pool-2-thread-3和pool-2-thread-4</li>
+<li>核心线程pool-2-thread-1和pool-2-thread-2执行完第一个任务后，又从队列中取出第二个任务执行</li>
+<li>主线程退出前线程池大小又回到了核心线程数，说明空闲线程已经被释放</li>
+</ul>
+<h4 id="同步移交-Abort"><a href="#同步移交-Abort" class="headerlink" title="同步移交+Abort"></a>同步移交+Abort</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">SynchronousQueue&lt;Runnable&gt; queue = <span class="keyword">new</span> SynchronousQueue&lt;&gt;();</span><br><span class="line">RejectedExecutionHandler handler = <span class="keyword">new</span> ThreadPoolExecutor.AbortPolicy();</span><br></pre></td></tr></table></figure>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line">11:07:26:130 INFO [main] poolSize=1</span><br><span class="line">11:07:26:130 INFO [pool-2-thread-1] run</span><br><span class="line">11:07:26:132 INFO [main] poolSize=2</span><br><span class="line">11:07:26:132 INFO [main] poolSize=3</span><br><span class="line">11:07:26:132 INFO [pool-2-thread-2] run</span><br><span class="line">11:07:26:133 INFO [main] poolSize=4</span><br><span class="line">11:07:26:133 ERROR [main] RejectedExecutionException</span><br><span class="line">11:07:26:133 INFO [main] poolSize=4</span><br><span class="line">11:07:26:134 ERROR [main] RejectedExecutionException</span><br><span class="line">11:07:26:134 INFO [main] poolSize=4</span><br><span class="line">11:07:26:135 INFO [pool-2-thread-3] run</span><br><span class="line">11:07:26:135 INFO [pool-2-thread-4] run</span><br><span class="line">11:07:27:143 INFO [pool-2-thread-3] <span class="built_in">exit</span></span><br><span class="line">11:07:27:143 INFO [pool-2-thread-2] <span class="built_in">exit</span></span><br><span class="line">11:07:27:143 INFO [pool-2-thread-4] <span class="built_in">exit</span></span><br><span class="line">11:07:27:143 INFO [pool-2-thread-1] <span class="built_in">exit</span></span><br><span class="line">11:07:31:150 INFO [main] poolSize=2</span><br><span class="line">11:07:31:150 INFO [main] <span class="built_in">exit</span></span><br></pre></td></tr></table></figure>
+<p>从日志中可以看出</p>
+<ul>
+<li>当线程数到达最大线程数4个以后，再提交的任务抛出了RejectedExecutionException异常</li>
+<li>所以与前面的结果不同，这次只执行了4个任务</li>
+<li>最后空闲线程被回收，线程数保持在2个</li>
+<li>AbortPolicy是默认的饱和策略</li>
+</ul>
+<blockquote>
+<p>以下已空队列为例，更换饱和策略</p>
+</blockquote>
+<h4 id="同步移交-Discard"><a href="#同步移交-Discard" class="headerlink" title="同步移交+Discard"></a>同步移交+Discard</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">SynchronousQueue&lt;Runnable&gt; queue = <span class="keyword">new</span> SynchronousQueue&lt;&gt;();</span><br><span class="line">RejectedExecutionHandler handler = <span class="keyword">new</span> ThreadPoolExecutor.DiscardPolicy();</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">11:12:20:113 INFO [pool-2-thread-1] run</span><br><span class="line">11:12:20:113 INFO [main] poolSize=1</span><br><span class="line">11:12:20:113 INFO [main] poolSize=2</span><br><span class="line">11:12:20:113 INFO [pool-2-thread-2] run</span><br><span class="line">11:12:20:113 INFO [main] poolSize=3</span><br><span class="line">11:12:20:113 INFO [main] poolSize=4</span><br><span class="line">11:12:20:113 INFO [pool-2-thread-3] run</span><br><span class="line">11:12:20:113 INFO [main] poolSize=4</span><br><span class="line">11:12:20:113 INFO [main] poolSize=4</span><br><span class="line">11:12:20:113 INFO [pool-2-thread-4] run</span><br><span class="line">11:12:21:128 INFO [pool-2-thread-4] exit</span><br><span class="line">11:12:21:128 INFO [pool-2-thread-2] exit</span><br><span class="line">11:12:21:128 INFO [pool-2-thread-3] exit</span><br><span class="line">11:12:21:128 INFO [pool-2-thread-1] exit</span><br><span class="line">11:12:25:119 INFO [main] poolSize=2</span><br><span class="line">11:12:25:119 INFO [main] exit</span><br></pre></td></tr></table></figure>
+<p>对比上面的日志可以发现</p>
+<ul>
+<li>同样也是只执行了4个任务</li>
+<li>区别在于没有抛出异常，也就是说Discard策略直接拒绝，来异常都不给，没啥用</li>
+</ul>
+<h4 id="同步移交-CallerRun"><a href="#同步移交-CallerRun" class="headerlink" title="同步移交+CallerRun"></a>同步移交+CallerRun</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line">SynchronousQueue&lt;Runnable&gt; queue = <span class="keyword">new</span> SynchronousQueue&lt;&gt;();</span><br><span class="line">RejectedExecutionHandler handler = <span class="keyword">new</span> ThreadPoolExecutor.CallerRunsPolicy();</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">11:18:11:432 INFO [pool-2-thread-1] run</span><br><span class="line">11:18:11:432 INFO [main] poolSize=1</span><br><span class="line">11:18:11:434 INFO [main] poolSize=2</span><br><span class="line">11:18:11:434 INFO [pool-2-thread-2] run</span><br><span class="line">11:18:11:434 INFO [main] poolSize=3</span><br><span class="line">11:18:11:435 INFO [main] poolSize=4</span><br><span class="line">11:18:11:435 INFO [main] run</span><br><span class="line">11:18:11:435 INFO [pool-2-thread-3] run</span><br><span class="line">11:18:11:435 INFO [pool-2-thread-4] run</span><br><span class="line">11:18:12:447 INFO [pool-2-thread-4] exit</span><br><span class="line">11:18:12:447 INFO [main] exit</span><br><span class="line">11:18:12:447 INFO [pool-2-thread-3] exit</span><br><span class="line">11:18:12:447 INFO [pool-2-thread-2] exit</span><br><span class="line">11:18:12:447 INFO [pool-2-thread-1] exit</span><br><span class="line">11:18:12:447 INFO [main] poolSize=4</span><br><span class="line">11:18:12:447 INFO [main] run</span><br><span class="line">11:18:13:448 INFO [main] exit</span><br><span class="line">11:18:13:448 INFO [main] poolSize=4</span><br><span class="line">11:18:18:454 INFO [main] poolSize=2</span><br><span class="line">11:18:18:454 INFO [main] exit</span><br></pre></td></tr></table></figure>
+<p>从日志中可以看出</p>
+<ul>
+<li>当线程数到达最大线程数4个以后，第5个任务开始在main线程中执行</li>
+<li>CallerRunsPolic保证了线程不会被丢弃，但交给主线程运行没有起到线程池的作用，应该也不常用</li>
+</ul>
+<h2 id="实战"><a href="#实战" class="headerlink" title="实战"></a>实战</h2><h3 id="Executors"><a href="#Executors" class="headerlink" title="Executors"></a>Executors</h3><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> java.util.concurrent;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Executors</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newSingleThreadExecutor</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> FinalizableDelegatedExecutorService</span><br><span class="line">            (<span class="keyword">new</span> ThreadPoolExecutor(<span class="number">1</span>, <span class="number">1</span>, <span class="number">0L</span>, TimeUnit.MILLISECONDS,</span><br><span class="line">                                    <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;()));</span><br><span class="line">    &#125;    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newFixedThreadPool</span><span class="params">(<span class="keyword">int</span> nThreads)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(nThreads, nThreads, <span class="number">0L</span>, TimeUnit.MILLISECONDS,</span><br><span class="line">                                      <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;());</span><br><span class="line">    &#125; </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newCachedThreadPool</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">0</span>, Integer.MAX_VALUE, <span class="number">60L</span>, TimeUnit.SECONDS,</span><br><span class="line">                                      <span class="keyword">new</span> SynchronousQueue&lt;Runnable&gt;());</span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Executors类提供了常用线程池的创建方法，不过不建议使用Executors来创建线程池，因为这会隐藏最终创建ThreadPoolExecutor类的参数，还是建议手工构造ThreadPoolExecutor，显示指定参数。下面详细看看三个预定义的线程池：</p>
+<ul>
+<li>SingleThread，顾名思义，线程池的核心和最大线程数都是1，无界排队策略；也就是说这个线程池中只有1个线程，其他并发线程排队等待，线程池一个一个来处理，简单，但是效率比较低；</li>
+<li>FixedThread，线程池的核心线程数与最大线程数保持一致，无界排队策略；也就是说这个线程池中没有非核心线程，最多可以同时处理N个任务，其他任务排队等待；SingleThread可以看作N=1的FixedThread；</li>
+<li>CachedThread，核心线程数0，最大线程数无穷大，无排队队列，保活时间60秒；也就是说这个线程池中的线程数是动态变化的，当有新任务时就创建新线程来处理（当前线程都在忙），处理完成后1分钟回收线程；如果没有任务，线程数就是0，如果任务非常多，线程数无限增加，直到耗尽系统资源。</li>
+</ul>
+<blockquote>
+<p>以上可以看出，Executors默认提供的几种线程池比较极端，实战中需要自定义ThreadPoolExecutor。</p>
+</blockquote>
+<h3 id="核心线程数"><a href="#核心线程数" class="headerlink" title="核心线程数"></a>核心线程数</h3><p>虽然排队策略看上去比较复杂，但我认为ThreadPoolExecutor最重要的参数是核心线程数；因为考虑到不拒绝任何任务，我们可以使用LinkedBlockingQueue实现无界队列，这样其他参数基本就都失效了，而核心线程数即使当前没有任务也要保留，就变得异常重要的。</p>
+<p>确定核心线程数，一般的思路是根据任务性质来判断的。如果是计算密集型任务，那么通常核心线程数设置为CPU个数+1，通过Runtime.getRuntime().availableProcessors();可以读取CPU个数。如果是I/O密集型任务，那么中断会多一些，核心线程数也可以多一些，一般可以设置为CPU个数的2倍。</p>
+<blockquote>
+<p>Apache MINA 的核心线程数设置为CPU个数+1<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">s=>start: 开始
+e=>end: 结束
+condCore=>condition: 小于核心线程数?
+condMax=>condition: 小于最大线程数?
+addCore=>operation: 增加核心线程
+addNormal=>operation: 增加非核心线程
+full=>operation: 饱和逻辑处理
+
+s->condCore
+condCore(yes, right)->addCore
+condCore(no)->condMax
+condMax(yes, right)->addNormal
+condMax(no)->full
+addNormal->e
+addCore->e
+full->e</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12,"theme":"simple"}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script><textarea id="flowchart-1-code" style="display: none">s=>start: 开始
+e=>end: 结束
+condCore=>condition: 小于核心线程数?
+condQueue=>condition: 队列未满?
+condMax=>condition: 小于最大线程数?
+addCore=>operation: 增加核心线程
+addNormal=>operation: 增加非核心线程
+addQueue=>operation: 排队等待执行
+full=>operation: 饱和逻辑处理
+
+s->condCore
+condCore(yes, right)->addCore
+condCore(no)->condQueue
+condQueue(yes, right)->addQueue
+condQueue(no)->condMax
+condMax(yes, right)->addNormal
+condMax(no)->full
+addQueue->e
+addNormal->e
+addCore->e
+full->e</textarea><textarea id="flowchart-1-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12,"theme":"simple"}</textarea><script>  var code = document.getElementById("flowchart-1-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-1-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-1", options);</script><textarea id="flowchart-2-code" style="display: none">s=>start: 开始
+e=>end: 结束
+condCore=>condition: 小于核心线程数?
+addCore=>operation: 增加核心线程
+addQueue=>operation: 排队等待执行
+
+s->condCore
+condCore(yes)->addCore
+condCore(no)->addQueue
+addQueue->e
+addCore->e</textarea><textarea id="flowchart-2-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12,"theme":"simple"}</textarea><script>  var code = document.getElementById("flowchart-2-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-2-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-2", options);</script></p>
+</blockquote>
+</div><div class="tags"><a href="/tags/并发/">并发</a><a href="/tags/线程/">线程</a><a href="/tags/线程池/">线程池</a><a href="/tags/排队策略/">排队策略</a><a href="/tags/饱和策略/">饱和策略</a></div><div class="post-nav"><a class="next" href="/2018/04/24/thread-threadpool/">多线程(2) 线程池</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"/><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/工具/">工具</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/并发编程/">并发编程</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">3</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/hexo/" style="font-size: 15px;">hexo</a> <a href="/tags/github/" style="font-size: 15px;">github</a> <a href="/tags/mq/" style="font-size: 15px;">mq</a> <a href="/tags/rocketmq/" style="font-size: 15px;">rocketmq</a> <a href="/tags/并发/" style="font-size: 15px;">并发</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/线程池/" style="font-size: 15px;">线程池</a> <a href="/tags/任务调度/" style="font-size: 15px;">任务调度</a> <a href="/tags/排队策略/" style="font-size: 15px;">排队策略</a> <a href="/tags/饱和策略/" style="font-size: 15px;">饱和策略</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/04/24/thread-threadpoolexecutor/">多线程(3) ThreadPoolExecutor</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/24/thread-threadpool/">多线程(2) 线程池</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/24/concurrent-thread/">多线程(1) 线程状态</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/23/rocketmq-dev/">RocketMQ(3) 开发</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/22/rocketmq-deploy/">RocketMQ(2) 部署与维护</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/21/rocketmq-intro/">RocketMQ(1) 概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/21/hexo-intro/">使用Hexo搭建自己的博客</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://github.com/waterlu" title="waterlu's github" target="_blank">waterlu's github</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2018 <a href="/." rel="nofollow">Waterlu's Blog.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>

@@ -375,23 +375,17 @@ div {
   .content_container {
     padding-right: 0; } }
 
+blockquote {
+  margin: 0;
+  padding: 0; }
+
 blockquote, .stressed {
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-  margin: 2.5em 0;
-  padding: 0 0 0 20px;
+  padding: 0 15px;
   color: #999999;
-  border-left: none; }
+  border-left: 4px solid #ddd; }
 
 blockquote::before, .stressed-quote::before {
-  content: "\|";
   display: block;
-  font-family: times;
-  font-style: normal;
-  font-size: 48px;
-  color: #999999;
-  font-weight: bold;
-  line-height: 30px;
   margin-left: -20px;
   position: absolute; }
 
@@ -747,10 +741,10 @@ pre {
 /* syntax highlight*/
 figure.highlight,
 .codeblock {
-  background: #f8f8f8;
+  background: #F8F8F8;
   margin: 10px 0;
   line-height: 1.1em;
-  color: #000333;
+  color: #000000;
   padding-top: 15px;
   overflow: hidden;
   border-style: solid;
@@ -823,7 +817,7 @@ figure.highlight,
   color: #969896; }
 
 .highlight .string {
-  color: #183691; }
+  color: #55a532; }
 
 .highlight .keyword {
   color: #a71d5d; }
@@ -967,21 +961,21 @@ figure.highlight,
   color: #333; }
 
 .highlight.java .code .title {
-  color: #795da3; }
+  color: #0000FF; }
 
 .highlight.java .code .javadoc {
-  color: #969896; }
+  color: #A0522D; }
 
 .highlight.java .code .meta,
 .highlight.java .code .annotation,
 .highlight.java .code .javadoctag {
-  color: #a71d5d; }
+  color: #A0522D; }
 
 .highlight.java .code .number {
-  color: #0086b3; }
+  color: #55a532; }
 
 .highlight.java .code .params {
-  color: #1d3e81; }
+  color: #000000; }
 
 .highlight.js .code .built_in,
 .highlight.js .code .title {

@@ -1,0 +1,111 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="个人技术博客"><title>RocketMQ(2) 部署与维护 | Waterlu's Blog</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/8.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">RocketMQ(2) 部署与维护</h1><a id="logo" href="/.">Waterlu's Blog</a><p class="description">小桥流水人家</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">RocketMQ(2) 部署与维护</h1><div class="post-meta">Apr 22, 2018<span> | </span><span class="category"><a href="/categories/消息队列/">消息队列</a></span><script src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><div class="clear"><div class="toc-article" id="toc"><div class="toc-title">文章目录</div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#部署"><span class="toc-number">1.</span> <span class="toc-text">部署</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#打包"><span class="toc-number">1.1.</span> <span class="toc-text">打包</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#启动"><span class="toc-number">1.2.</span> <span class="toc-text">启动</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#关闭"><span class="toc-number">1.3.</span> <span class="toc-text">关闭</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#命令管理"><span class="toc-number">2.</span> <span class="toc-text">命令管理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#控制台"><span class="toc-number">3.</span> <span class="toc-text">控制台</span></a></li></ol></div></div><div class="post-content"><p>由于用到了事务消息功能，所以我使用的是3.1.4版本，这是一个非常老的版本，没有使用最新的版本。RocketMQ从4.0版本开始在Apche孵化，现在最新的版本是4.2.0，预计4.3.0版本可能会增加事务消息功能。3.x的最新稳定版本是3.5.8。</p>
+<p>RocketMQ官方版本V3.0.4~3.1.4基于文件系统实现了事务消息，已开源；V3.1.5~4.2.0基于数据库实现事务消息，未开源。</p>
+<h2 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h2><p><a href="https://github.com/YunaiV/rocketmq-3.1.9/tree/release_3.1.4" target="_blank" rel="noopener">这里</a> 有V3.1.4版本的源码，是作为V3.1.9的一个fork的分支存在的，以下操作都以V3.1.4版本为例，最新版本可能会不一样。</p>
+<h3 id="打包"><a href="#打包" class="headerlink" title="打包"></a>打包</h3><ul>
+<li><p>环境准备：安装rocketmq前需要先安装jdk，git和maven</p>
+</li>
+<li><p>编译打包</p>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> cd rocketmq-3.1.4</span><br><span class="line"><span class="meta">$</span> mvn -Dmaven.test.skip=true clean package install assembly:assembly -U</span><br><span class="line"><span class="meta">$</span> cd ./target/alibaba-rocketmq-3.1.4/alibaba-rocketmq</span><br><span class="line"><span class="meta">$</span> ls -l</span><br><span class="line">drwxrwxr-x 2 lu lu  4096 Jan 20 16:34 benchmark</span><br><span class="line">drwxrwxr-x 2 lu lu  4096 Jan 20 16:34 bin</span><br><span class="line">drwxrwxr-x 5 lu lu  4096 Jan 20 16:34 conf</span><br><span class="line">drwxrwxr-x 2 lu lu  4096 Jan 20 16:34 lib</span><br><span class="line">-rw-rw-r-- 1 lu lu 10275 Jan 20 16:34 LICENSE.txt</span><br><span class="line">drwxrwxr-x 2 lu lu  4096 Jan 20 16:34 test</span><br></pre></td></tr></table></figure>
+<h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><p>由于默认启动参数配置的内存比较大，我们一般会先调整一下内存参数，具体为修改apache-rocketmq/bin目录下的runserver.sh和runbroker.sh脚本，修改其中的JAVA_OPT，将Xms/Xmx/Xmn等内存参数调整到合适大小</p>
+<p><img src="/images/rocketmq_intro_architecture.png" alt="图1-RocketMQ部署图"></p>
+<p>如上图所示，RocketMQ由NameServer和BrokerServer组成，其中NameServer用做注册中心，Broker启动后注册到NameServer，Producer和Consumer与NameServer通信，获取Broker的地址；Producer发送消息给Broker，Broker完成消息存储，并负责将消息投递给Consumer。</p>
+<p>首先，启动NameServer，NameServer的服务端口为9876</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> cd target/alibaba-rocketmq-3.1.4/alibaba-rocketmq</span><br><span class="line"><span class="meta">$</span>  nohup sh bin/mqnamesrv &gt; /dev/null 2&gt;&amp;1 &amp;</span><br></pre></td></tr></table></figure>
+<p>然后，启动BrokerServer，其中-n参数为NameServer的地址和端口，Broker的服务端口为10911和10912，10911供Producer和Consumer通信使用，10912供Broker集群通信使用</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> cd target/alibaba-rocketmq-3.1.4/alibaba-rocketmq</span><br><span class="line"><span class="meta">$</span> nohup sh bin/mqbroker -n localhost:9876 &gt; /dev/null 2&gt;&amp;1 &amp;</span><br></pre></td></tr></table></figure>
+<p>Broker启动时将自己的地址和端口注册到NameServer上，但存在多网卡时，Broker有可能获取不到正确的IP地址，最后导致Producer和Consumer连接不到Broker上，出现类似下面这样的错误。</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">connect to &lt;172.17.0.1:10911&gt; failed</span><br></pre></td></tr></table></figure>
+<p>这种情况下，我们需要在Broker启动时指定IP地址，具体方法为配置一个启动参数文件broker.properties，内容如下（可以从conf/2m-noslave/broker-a.properties复制并修改）：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">brokerClusterName=DefaultCluster</span><br><span class="line">brokerName=broker-a</span><br><span class="line">brokerId=0</span><br><span class="line">brokerIP=10.10.10.100</span><br><span class="line">deleteWhen=04</span><br><span class="line">fileReservedTime=48</span><br><span class="line">brokerRole=ASYNC_MASTER</span><br><span class="line">flushDiskType=ASYNC_FLUSH</span><br></pre></td></tr></table></figure>
+<p>启动脚本如下，重点在于-c参数指定了配置文件，当前如果需要我们可以在broker.properties中做更多的个性化配置</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> nohup sh bin/mqbroker -n localhost:9876 -c conf/broker.properties &gt; /dev/null 2&gt;&amp;1 &amp;</span><br></pre></td></tr></table></figure>
+<h3 id="关闭"><a href="#关闭" class="headerlink" title="关闭"></a>关闭</h3><p>关闭Broker服务</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> sh bin/mqshutdown broker</span><br></pre></td></tr></table></figure>
+<p>关闭NameServer服务</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> sh bin/mqshutdown namesrv</span><br></pre></td></tr></table></figure>
+<h2 id="命令管理"><a href="#命令管理" class="headerlink" title="命令管理"></a>命令管理</h2><p>RocketMQ提供了bin/mqadmin命令行对消息队列进行管理。</p>
+<blockquote>
+<p>-n设置NameServer地址和端口(从NameServer上获取Broker地址和端口)</p>
+</blockquote>
+<ul>
+<li><p>查看主题列表</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> bin/mqadmin topicList -n localhost:9876</span><br><span class="line">TBW102</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>创建主题</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-n</td>
+<td>NameServer地址和端口</td>
+</tr>
+<tr>
+<td>-b</td>
+<td>Broker地址和端口(Topic创建在这个Broker上面)</td>
+</tr>
+<tr>
+<td>-c</td>
+<td>Cluster名称（Broker和Cluster二选一）</td>
+</tr>
+<tr>
+<td>-t</td>
+<td>Topic主题名称</td>
+</tr>
+<tr>
+<td>-r</td>
+<td>读队列数(默认8个)</td>
+</tr>
+<tr>
+<td>-w</td>
+<td>写队列数(默认8个)</td>
+</tr>
+</tbody>
+</table>
+<p>创建主题test</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> bin/mqadmin updateTopic -n localhost:9876 -b localhost:10911 -t test -r 4 -w 4</span><br><span class="line">create topic to localhost:10911 success.</span><br><span class="line">TopicConfig [topicName=test, readQueueNums=4, writeQueueNums=4, perm=RW-, topicFilterType=SINGLE_TAG]</span><br><span class="line"><span class="meta">$</span> bin/mqadmin topicList -n localhost:9876</span><br><span class="line">TBW102</span><br><span class="line">test</span><br></pre></td></tr></table></figure>
+<ul>
+<li>查看Topic信息</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> bin/mqadmin topicStats -n localhost:9876 -t test</span><br></pre></td></tr></table></figure>
+<ul>
+<li>查看集群信息</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> bin/mqadmin clusterList -n localhost:9876</span><br><span class="line"><span class="meta">#</span>Cluster Name     #Broker Name	#BID  #Addr                  #Version</span><br><span class="line">DefaultCluster    ubuntu        0     172.17.0.1:10911       V3_1_4</span><br></pre></td></tr></table></figure>
+<ul>
+<li>根据MessageID查询消息</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> bin/mqadmin queryMsgById -n localhost:9876 -i</span><br></pre></td></tr></table></figure>
+<ul>
+<li>根据消息Key查询消息</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> bin/mqadmin queryMsgByKey -n localhost:9876 -t test -k</span><br></pre></td></tr></table></figure>
+<h2 id="控制台"><a href="#控制台" class="headerlink" title="控制台"></a>控制台</h2><p>虽然可以通过命令行查看RocketMQ状态，但是使用起来很不方便。</p>
+<p>rocketmq-console项目封装了mqadmin指令，提供了web页面来展示rocketmq信息，所以通常我们都使用rocketmq-console来查看RocketMQ状态。</p>
+<p>rocketmq-console属于<a href="https://github.com/apache/rocketmq-externals" target="_blank" rel="noopener">rocketmq-externals</a> 项目的一部分。</p>
+<ul>
+<li>首先，获取源码</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> git clone https://github.com/apache/rocketmq-externals</span><br></pre></td></tr></table></figure>
+<ul>
+<li>然后，打包部署(rocketmq-console是spring boot项目)</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">$</span> cd rocketmq-externals/rocketmq-console</span><br><span class="line"><span class="meta">$</span> mvn clean package -Dmaven.test.skip=true</span><br><span class="line"><span class="meta">$</span> java -jar rocketmq-console-ng-1.0.0.jar --server.port=12581 --rocketmq.config.namesrvAddr=10.89.0.64:9876</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>v3.1.4版本是没有提供控制台工具的，rocketmq-externals(包括rocketmq-console)是为rocketmq v4.0.0以上版本服务的。所以，理论上rocketmq-console和v3.1.4是不兼容的。不过，mqadmin的指令协议没有变化，所以基本使用是可以的。当然，升级到4.0.0以上版本就更没有问题了。</p>
+</blockquote>
+</div><div class="tags"><a href="/tags/mq/">mq</a><a href="/tags/rocketmq/">rocketmq</a></div><div class="post-nav"><a class="pre" href="/2018/04/23/rocketmq-dev/">RocketMQ(3) 开发</a><a class="next" href="/2018/04/21/rocketmq-intro/">RocketMQ(1) 概述</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"/><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/工具/">工具</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/并发编程/">并发编程</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">3</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/hexo/" style="font-size: 15px;">hexo</a> <a href="/tags/github/" style="font-size: 15px;">github</a> <a href="/tags/mq/" style="font-size: 15px;">mq</a> <a href="/tags/rocketmq/" style="font-size: 15px;">rocketmq</a> <a href="/tags/并发/" style="font-size: 15px;">并发</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/线程池/" style="font-size: 15px;">线程池</a> <a href="/tags/任务调度/" style="font-size: 15px;">任务调度</a> <a href="/tags/排队策略/" style="font-size: 15px;">排队策略</a> <a href="/tags/饱和策略/" style="font-size: 15px;">饱和策略</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/04/24/thread-threadpoolexecutor/">多线程(3) ThreadPoolExecutor</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/24/thread-threadpool/">多线程(2) 线程池</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/24/concurrent-thread/">多线程(1) 线程状态</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/23/rocketmq-dev/">RocketMQ(3) 开发</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/22/rocketmq-deploy/">RocketMQ(2) 部署与维护</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/21/rocketmq-intro/">RocketMQ(1) 概述</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/21/hexo-intro/">使用Hexo搭建自己的博客</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://github.com/waterlu" title="waterlu's github" target="_blank">waterlu's github</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2018 <a href="/." rel="nofollow">Waterlu's Blog.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
