@@ -1,0 +1,125 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="个人技术博客"><title>MySQL索引 | Waterlu's Blog</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/8.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">MySQL索引</h1><a id="logo" href="/.">Waterlu's Blog</a><p class="description">以铜为鉴，可正衣冠；以史为鉴，可知兴替；以人为鉴，可明得失。</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">MySQL索引</h1><div class="post-meta">May 4, 2018<span> | </span><span class="category"><a href="/categories/数据库/">数据库</a></span><script src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><div class="clear"><div class="toc-article" id="toc"><div class="toc-title">文章目录</div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#MySQL索引"><span class="toc-number">1.</span> <span class="toc-text">MySQL索引</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#BTree索引"><span class="toc-number">1.1.</span> <span class="toc-text">BTree索引</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#数据结构"><span class="toc-number">1.1.1.</span> <span class="toc-text">数据结构</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#二叉树"><span class="toc-number">1.1.1.1.</span> <span class="toc-text">二叉树</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#二分查找树"><span class="toc-number">1.1.1.2.</span> <span class="toc-text">二分查找树</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#AVL树"><span class="toc-number">1.1.1.3.</span> <span class="toc-text">AVL树</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#红黑树"><span class="toc-number">1.1.1.4.</span> <span class="toc-text">红黑树</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#B树-B-tree"><span class="toc-number">1.1.2.</span> <span class="toc-text">B树(B-tree)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#B-树"><span class="toc-number">1.1.3.</span> <span class="toc-text">B+树</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#B-树-1"><span class="toc-number">1.1.4.</span> <span class="toc-text">B*树</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL索引基础"><span class="toc-number">1.2.</span> <span class="toc-text">MySQL索引基础</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#MySQL索引的类型"><span class="toc-number">1.2.0.1.</span> <span class="toc-text">MySQL索引的类型</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL索引原理"><span class="toc-number">1.3.</span> <span class="toc-text">MySQL索引原理</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#为什么用B-树存储索引"><span class="toc-number">1.3.1.</span> <span class="toc-text">为什么用B+树存储索引</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#MyISAM实现"><span class="toc-number">1.3.2.</span> <span class="toc-text">MyISAM实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#InnoDB实现"><span class="toc-number">1.3.3.</span> <span class="toc-text">InnoDB实现</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL索引使用"><span class="toc-number">1.4.</span> <span class="toc-text">MySQL索引使用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#复合索引"><span class="toc-number">1.4.1.</span> <span class="toc-text">复合索引</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#索引失效"><span class="toc-number">1.4.2.</span> <span class="toc-text">索引失效</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Innodb插入优化"><span class="toc-number">1.4.3.</span> <span class="toc-text">Innodb插入优化</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#参考"><span class="toc-number">1.5.</span> <span class="toc-text">参考</span></a></li></ol></li></ol></div></div><div class="post-content"><h2 id="MySQL索引"><a href="#MySQL索引" class="headerlink" title="MySQL索引"></a>MySQL索引</h2><h3 id="BTree索引"><a href="#BTree索引" class="headerlink" title="BTree索引"></a>BTree索引</h3><h4 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h4><p>从查找说起，数据库查询就是查找的一种，不同的存储结构（数据结构）决定了查找的方法和效率。先从数据结构的角度看看为什么选用B树作为索引的数据结构。</p>
+<h5 id="二叉树"><a href="#二叉树" class="headerlink" title="二叉树"></a>二叉树</h5><p>二叉树：每个节点最多有两个子节点。</p>
+<p>节点的度：一个节点拥有的子树的个数。</p>
+<p>满二叉树：除叶子节点外，其他节点都有两个子节点。满二叉树的最大特点是每一层次的结点数都达到最大值。</p>
+<p>完全二叉树：只有最底层不满，最底层从左侧开始没有空的。(<strong>Complete Binary Tree</strong>)</p>
+<h5 id="二分查找树"><a href="#二分查找树" class="headerlink" title="二分查找树"></a>二分查找树</h5><p>也叫二叉搜索树（BST树），首先是二叉树，小的存储到左侧节点，大的存储到右侧节点。</p>
+<ul>
+<li>左子树上所有结点的值均小于它的根结点的值</li>
+<li>右子树上所有结点的值均大于它的根结点的值</li>
+</ul>
+<p>查找的时候，从根节点开始比较，小于根的值就递归从左子树中查找，大于根的值就递归从右子树中查找。</p>
+<p>添加节点也是一样，从根节点开始，找到合适的问题并添加。</p>
+<p>删除节点麻烦一些，如果删除叶子节点比较简单，直接删除即可；如果删除非叶子节点，</p>
+<h5 id="AVL树"><a href="#AVL树" class="headerlink" title="AVL树"></a>AVL树</h5><p>高度平衡二叉树，在AVL树中任何节点的两个子树的高度最大差别为一。</p>
+<p>O(log n)</p>
+<h5 id="红黑树"><a href="#红黑树" class="headerlink" title="红黑树"></a>红黑树</h5><p>JDK8的HashMap用到了红黑树来存储数据。</p>
+<p>从二叉树看，红黑树是一颗相对平衡的二叉树。二叉树–&gt;搜索二叉树–&gt;平衡搜索二叉树–&gt; 红黑树。</p>
+<ul>
+<li>根和叶子节点都是黑色的；</li>
+<li>不能有有连续两个红色的节点；</li>
+<li>从任一节点到它所能到达得叶子节点的所有简单路径都包含相同数目的黑色节点</li>
+</ul>
+<h4 id="B树-B-tree"><a href="#B树-B-tree" class="headerlink" title="B树(B-tree)"></a>B树(B-tree)</h4><p>B通常认为是Balance的简称，B树不是二叉树。一棵m阶B树(balanced tree of order m)是一棵平衡的m路搜索树。一颗M阶B树是一颗平衡的M路搜索树，它或者是空树，或者满足下列条件：</p>
+<ul>
+<li>根结点至少有两个孩子；</li>
+<li>每个中间节点都包含k-1个元素和k个孩子，其中 M/2 &lt;= k &lt;= M；(向上取整)</li>
+<li>每个叶子节点都包含k-1个元素，其中 M/2 &lt;= k &lt;= M；(向上取整)</li>
+<li>每个节点中的元素从小到大升序排列；节点当中k-1个元素正好是k个孩子包含的元素的值域划分；</li>
+<li>所有的叶子节点都在同一层。</li>
+</ul>
+<p>B树在插入时可能需要调整节点进行自平衡，删除也是一样；添加和删除节点后，可能导致不满足B+树条件，这个时候就需要调整，这个调整的过程称为自平衡。</p>
+<p>我认为，二分查找树可以看作2阶的B树：每个节点都只有1个键值，2个子节点，左边子节点键值小于父节点键值，右边子节点键值大于父节点键值。以此类推，3阶的情况如下：每个节点有1-2个键值，1个键值的情况同上；如果有2个键值，那么有3个子节点。第N个子节点的键值位于父节点[N-1,N]键值之间。</p>
+<p>以5阶B树为例，每个节点最多有4个元素，5个孩子。假设元素值为 (10, 20, 30, 40)，那么5个子节点的元素值范围是<code>c0 &lt;10，10 &lt; c1 &lt; 20，20 &lt; c2 &lt;30，30 &lt; c3 &lt; 40，c4 &gt; 40</code> ，也就是分布于左右。</p>
+<p><img src="/images/mysql-index-b-tree-e1.png" alt="B树例子"></p>
+<h4 id="B-树"><a href="#B-树" class="headerlink" title="B+树"></a>B+树</h4><p>B树有很多变种，B+树就是其中一种，MySQL使用B+树作为索引的数据结构。</p>
+<p>B+树与B树的区别：</p>
+<ul>
+<li>B树所有节点都保存数据，B+树只有叶子节点保存数据；</li>
+</ul>
+<h4 id="B-树-1"><a href="#B-树-1" class="headerlink" title="B*树"></a>B*树</h4><p>基于B+树继续优化，增加顺序指针。</p>
+<ul>
+<li>每个叶子节点增加一个指向相邻叶子节点的指针；</li>
+<li>这样可以提高区间查询的效率，例如：where age &gt;= 30 and age &lt; 50；</li>
+<li>​</li>
+</ul>
+<h3 id="MySQL索引基础"><a href="#MySQL索引基础" class="headerlink" title="MySQL索引基础"></a>MySQL索引基础</h3><p>索引分为聚簇索引和非聚簇索引两种，聚簇索引是按照数据存放的物理位置为顺序的，而非聚簇索引就不一样了；聚簇索引能提高多行检索的速度，而非聚簇索引对于单行的检索很快。</p>
+<h5 id="MySQL索引的类型"><a href="#MySQL索引的类型" class="headerlink" title="MySQL索引的类型"></a>MySQL索引的类型</h5><p>普通索引</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">INDEX</span> index_name <span class="keyword">ON</span> table_name(<span class="keyword">column</span>(<span class="keyword">length</span>));</span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> table_name <span class="keyword">ADD</span> <span class="keyword">INDEX</span> index_name <span class="keyword">ON</span> (<span class="keyword">column</span>(<span class="keyword">length</span>));</span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">INDEX</span> index_name <span class="keyword">ON</span> table_name;</span><br></pre></td></tr></table></figure>
+<p>唯一索引，与普通索引类似，不同的就是：索引列的值必须唯一，但允许有空值（注意和主键不同）。</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">UNIQUE</span> <span class="keyword">INDEX</span> indexName <span class="keyword">ON</span> table_name(<span class="keyword">column</span>(<span class="keyword">length</span>));</span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> table_name <span class="keyword">ADD</span> <span class="keyword">UNIQUE</span> indexName <span class="keyword">ON</span> (<span class="keyword">column</span>(<span class="keyword">length</span>));</span><br></pre></td></tr></table></figure>
+<p>全文索引</p>
+<p>FULLTEXT索引仅可用于 MyISAM 表</p>
+<p>组合索引（最左前缀）</p>
+<p>例如上表中针对title和time建立一个组合索引：ALTER TABLE article ADD INDEX index_titme_time (title(50),time(10))。建立这样的组合索引，其实是相当于分别建立了下面两组组合索引：</p>
+<p>–title,time</p>
+<p>–title</p>
+<p>为什么没有time这样的组合索引呢？这是因为MySQL组合索引“最左前缀”的结果。简单的理解就是只从最左面的开始组合。</p>
+<h3 id="MySQL索引原理"><a href="#MySQL索引原理" class="headerlink" title="MySQL索引原理"></a>MySQL索引原理</h3><p>MySQL索引使用改进的B+树来实现。</p>
+<h4 id="为什么用B-树存储索引"><a href="#为什么用B-树存储索引" class="headerlink" title="为什么用B+树存储索引"></a>为什么用B+树存储索引</h4><p>为什么不使用二分查找树来实现索引呢？二分查找树效率也很高啊，时间复杂度O(log(n))。</p>
+<p>如果索引全部在内存中，那么使用二分查找树是没有问题的。但实际情况中，索引文件可能很大，不可能全部加载到内存中，这就意味着对索引的访问涉及到磁盘I/O。也就是说，虽然二分查找树算法的比较次数少，但是需要去和磁盘上的索引数据进行比较，访问太慢，虽然次数少，但是时间长。</p>
+<p>简单分析一下磁盘I/O，磁盘由磁片和磁头组成，磁片旋转</p>
+<p>那么，B+树难道就不需要访问磁盘I/O了，内存同样放不下啊。实际操作中，我们每次加载磁盘一页的数据到内存中，MySQL索引B+树的每一个节点就保存一页数据，可以一次加载到内存中。这样，虽然比较次数多了，但是磁盘I/O次数少了，整体还是高效的。</p>
+<p>二分查找树（二叉搜索树）本质上是二叉树，当数据量比较大时，树的高度一定非常高。B+树是多路搜索树，当阶数比较大时，树的高度可以很低。如果索引数据需要从磁盘加载，那么树的高度就决定了磁盘I/O的次数，也就决定了执行速度。</p>
+<p>以查找数据10为例，二分查找树需要4次比较和4次磁盘I/O；</p>
+<h4 id="MyISAM实现"><a href="#MyISAM实现" class="headerlink" title="MyISAM实现"></a>MyISAM实现</h4><p>MyISAM引擎使用B+Tree作为索引结构，叶节点的data域存放的是数据记录的地址。MyISAM的索引方式也叫做“非聚簇索引”。</p>
+<p><img src="/images/mysql-index-myisam.png" alt="MyISAM主索引"></p>
+<p>在MyISAM中，主索引和辅助索引（Secondary key）在结构上没有任何区别，只是主索引要求key是唯一的，而辅助索引的key可以重复。</p>
+<p><img src="/images/mysql-index-myisam-2.png" alt="MyISAM普通索引"></p>
+<h4 id="InnoDB实现"><a href="#InnoDB实现" class="headerlink" title="InnoDB实现"></a>InnoDB实现</h4><p>虽然InnoDB也使用B+Tree作为索引结构，但具体实现方式却与MyISAM截然不同。</p>
+<p>第一个重大区别是InnoDB的数据文件本身就是索引文件。从上文知道，MyISAM索引文件和数据文件是分离的，索引文件仅保存数据记录的地址。而在InnoDB中，表数据文件本身就是按B+Tree组织的一个索引结构，这棵树的叶节点data域保存了完整的数据记录。这个索引的key是数据表的主键，因此InnoDB表数据文件本身就是主索引。</p>
+<p>因为InnoDB的数据文件本身要按主键聚集，所以InnoDB要求表必须有主键（MyISAM可以没有），如果没有显式指定，则MySQL系统会自动选择一个可以唯一标识数据记录的列作为主键，如果不存在这种列，则MySQL自动为InnoDB表生成一个隐含字段作为主键，这个字段长度为6个字节，类型为长整形。所以，表必须要有主键。</p>
+<p>第二个与MyISAM索引的不同是InnoDB的辅助索引data域存储相应记录主键的值而不是地址。换句话说，InnoDB的所有辅助索引都引用主键作为data域。聚集索引这种实现方式使得按主键的搜索十分高效，但是辅助索引搜索需要检索两遍索引：首先检索辅助索引获得主键，然后用主键到主索引中检索获得记录。</p>
+<p>知道了InnoDB的索引实现后，就很容易明白为什么不建议使用过长的字段作为主键，因为所有辅助索引都引用主索引，过长的主索引会令辅助索引变得过大。</p>
+<h3 id="MySQL索引使用"><a href="#MySQL索引使用" class="headerlink" title="MySQL索引使用"></a>MySQL索引使用</h3><p>高效使用索引的首要条件是知道什么样的查询会使用到索引，这个问题和B+Tree中的“最左前缀原理”有关，下面通过例子说明最左前缀原理。</p>
+<h4 id="复合索引"><a href="#复合索引" class="headerlink" title="复合索引"></a>复合索引</h4><h4 id="索引失效"><a href="#索引失效" class="headerlink" title="索引失效"></a>索引失效</h4><p>索引命中</p>
+<p><code>&lt;，&lt;=，=，&gt;，&gt;=，BETWEEN，IN, like &#39;xx%&#39;</code> </p>
+<p>索引不能命中</p>
+<p><code>&lt;&gt;，not in ，!=，like &#39;%xx&#39;</code> </p>
+<p>1.索引不存储null值</p>
+<p>更准确的说，单列索引不存储null值，复合索引不存储全为null的值。索引不能存储Null，所以对这列采用is null条件时，因为索引上根本</p>
+<p>没Null值，不能利用到索引，只能全表扫描。</p>
+<p>为什么索引列不能存Null值？</p>
+<p>将索引列值进行建树，其中必然涉及到诸多的比较操作。Null值的特殊性就在于参与的运算大多取值为null。</p>
+<p>这样的话，null值实际上是不能参与进建索引的过程。也就是说，null值不会像其他取值一样出现在索引树的叶子节点上。</p>
+<p>2.不适合键值较少的列（重复数据较多的列）</p>
+<p>假如索引列TYPE有5个键值，如果有1万条数据，那么 WHERE TYPE = 1将访问表中的2000个数据块。</p>
+<p>再加上访问索引块，一共要访问大于200个的数据块。</p>
+<p>如果全表扫描，假设10条数据一个数据块，那么只需访问1000个数据块，既然全表扫描访问的数据块</p>
+<p>少一些，肯定就不会利用索引了。</p>
+<p>3.前导模糊查询不能利用索引(like ‘%XX’或者like ‘%XX%’)</p>
+<p>假如有这样一列code的值为’AAA’,’AAB’,’BAA’,’BAB’ ,如果where code like ‘%AB’条件，由于前面是</p>
+<p>模糊的，所以不能利用索引的顺序，必须一个个去找，看是否满足条件。这样会导致全索引扫描或者全表扫</p>
+<p>描。如果是这样的条件where code like ‘A % ‘，就可以查找CODE中A开头的CODE的位置，当碰到B开头的</p>
+<p>数据时，就可以停止查找了，因为后面的数据一定不满足要求。这样就可以利用索引了。</p>
+<p>4.索引失效的几种情况</p>
+<p>1.如果条件中有or，即使其中有条件带索引也不会使用(这也是为什么尽量少用or的原因)</p>
+<p>要想使用or，又想让索引生效，只能将or条件中的每个列都加上索引</p>
+<p>2.对于多列索引，不是使用的第一部分，则不会使用索引</p>
+<p>3.like查询以%开头</p>
+<p>4.如果列类型是字符串，那一定要在条件中将数据使用引号引用起来,否则不使用索引</p>
+<p>5.如果mysql估计使用全表扫描要比使用索引快,则不使用索引</p>
+<p>5.MySQL主要提供2种方式的索引：B-Tree索引，Hash索引</p>
+<p>B树索引具有范围查找和前缀查找的能力，对于有N节点的B树，检索一条记录的复杂度为O(LogN)。相当于二分查找。</p>
+<p>哈希索引只能做等于查找，但是无论多大的Hash表，查找复杂度都是O(1)。</p>
+<p>显然，如果值的差异性大，并且以等值查找（=、 &lt;、&gt;、in）为主，Hash索引是更高效的选择，它有O(1)的查找复杂度。</p>
+<p>如果值的差异性相对较差，并且以范围查找为主，B树是更好的选择，它支持范围查找。</p>
+<h4 id="Innodb插入优化"><a href="#Innodb插入优化" class="headerlink" title="Innodb插入优化"></a>Innodb插入优化</h4><p>InnoDB使用聚集索引，数据记录本身被存于主索引（一颗B+Tree）的叶子节点上。这就要求同一个叶子节点内（大小为一个内存页或磁盘页）的各条数据记录按主键顺序存放，因此每当有一条新的记录插入时，MySQL会根据其主键将其插入适当的节点和位置，如果页面达到装载因子（InnoDB默认为15/16），则开辟一个新的页（节点）。</p>
+<p>如果表使用自增主键，那么每次插入新的记录，记录就会顺序添加到当前索引节点的后续位置，当一页写满，就会自动开辟一个新的页。这样就会形成一个紧凑的索引结构，近似顺序填满。由于每次插入时也不需要移动已有数据，因此效率很高，也不会增加很多开销在维护索引上。</p>
+<p>如果使用非自增主键（如果身份证号或学号等），由于每次插入主键的值近似于随机，因此每次新纪录都要被插到现有索引页得中间某个位置：此时MySQL不得不为了将新记录插到合适位置而移动数据，甚至目标页面可能已经被回写到磁盘上而从缓存中清掉，此时又要从磁盘上读回来，这增加了很多开销，同时频繁的移动、分页操作造成了大量的碎片，得到了不够紧凑的索引结构，后续不得不通过OPTIMIZE TABLE来重建表并优化填充页面。</p>
+<p>只要可以，请尽量在InnoDB上采用自增字段做主键。</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p><a href="https://blog.csdn.net/bitboss/article/details/53219945" target="_blank" rel="noopener">探索B树/B+树与MySQL数据库索引的关系</a></p>
+<p><a href="http://www.cnblogs.com/maybe2030/p/4732377.html" target="_blank" rel="noopener">数据结构中各种树</a></p>
+<p><a href="https://blog.csdn.net/bitboss/article/details/53219945" target="_blank" rel="noopener">探索B树/B+树与MySQL数据库索引的关系</a></p>
+<p><a href="https://blog.csdn.net/debug_zhang/article/details/52168552" target="_blank" rel="noopener">mysql索引的实现原理</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/27700617" target="_blank" rel="noopener">平衡二叉树、B树、B+树、B*树</a></p>
+<p><a href="https://blog.csdn.net/qq_26768741/article/details/53164202" target="_blank" rel="noopener">浅析——B树，B+树，B*树以及分析MySQL的两种引擎</a></p>
+<p><a href="http://www.cnblogs.com/crazylqy/p/7615388.html" target="_blank" rel="noopener">mysql索引总结</a></p>
+<p><a href="http://blog.jobbole.com/87107/" target="_blank" rel="noopener">由浅入深探究 MySQL索引结构原理、性能分析与优化</a></p>
+</div><div class="tags"><a href="/tags/MySQL/">MySQL</a><a href="/tags/索引/">索引</a></div><div class="post-nav"><a class="pre" href="/2018/05/07/web-short-url/">从短地址说起</a><a class="next" href="/2018/05/03/performance-linux/">性能调优</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"/><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/JAVA/">JAVA</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/WEB/">WEB</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/分布式/">分布式</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/工具/">工具</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/并发编程/">并发编程</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/设计模式/">设计模式</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/内存模型/" style="font-size: 15px;">内存模型</a> <a href="/tags/hexo/" style="font-size: 15px;">hexo</a> <a href="/tags/mq/" style="font-size: 15px;">mq</a> <a href="/tags/rocketmq/" style="font-size: 15px;">rocketmq</a> <a href="/tags/并发/" style="font-size: 15px;">并发</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/线程池/" style="font-size: 15px;">线程池</a> <a href="/tags/排队策略/" style="font-size: 15px;">排队策略</a> <a href="/tags/饱和策略/" style="font-size: 15px;">饱和策略</a> <a href="/tags/多线程/" style="font-size: 15px;">多线程</a> <a href="/tags/单例/" style="font-size: 15px;">单例</a> <a href="/tags/线程安全/" style="font-size: 15px;">线程安全</a> <a href="/tags/任务调度/" style="font-size: 15px;">任务调度</a> <a href="/tags/synchronized/" style="font-size: 15px;">synchronized</a> <a href="/tags/wait/" style="font-size: 15px;">wait</a> <a href="/tags/notify/" style="font-size: 15px;">notify</a> <a href="/tags/github/" style="font-size: 15px;">github</a> <a href="/tags/内存可见性/" style="font-size: 15px;">内存可见性</a> <a href="/tags/指令重排序/" style="font-size: 15px;">指令重排序</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/WEB/" style="font-size: 15px;">WEB</a> <a href="/tags/短地址/" style="font-size: 15px;">短地址</a> <a href="/tags/哈希/" style="font-size: 15px;">哈希</a> <a href="/tags/hashCode/" style="font-size: 15px;">hashCode</a> <a href="/tags/JAVA/" style="font-size: 15px;">JAVA</a> <a href="/tags/Hashmap/" style="font-size: 15px;">Hashmap</a> <a href="/tags/哈希冲突/" style="font-size: 15px;">哈希冲突</a> <a href="/tags/Database/" style="font-size: 15px;">Database</a> <a href="/tags/Sharding/" style="font-size: 15px;">Sharding</a> <a href="/tags/分布式/" style="font-size: 15px;">分布式</a> <a href="/tags/SnowFlake/" style="font-size: 15px;">SnowFlake</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/05/08/java-batis-hashmap/">HashMap源码分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/07/database-theory/">数据库原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/07/web-short-url/">从短地址说起</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/04/mysql-index/">MySQL索引</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/performance-linux/">性能调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/distributed-system-lock/">分布式锁</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/distributed-system-unique-id/">分布式ID生成器</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/database-sharding/">数据库水平拆分</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/mysql-rules/">MySQL使用规范</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/02/design-pattern-singleton/">Singleton</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://github.com/waterlu" title="waterlu's github" target="_blank">waterlu's github</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2018 <a href="/." rel="nofollow">Waterlu's Blog.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>

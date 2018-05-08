@@ -1,0 +1,138 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="个人技术博客"><title>多线程中级篇(1) 线程状态 | Waterlu's Blog</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/8.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">多线程中级篇(1) 线程状态</h1><a id="logo" href="/.">Waterlu's Blog</a><p class="description">以铜为鉴，可正衣冠；以史为鉴，可知兴替；以人为鉴，可明得失。</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">多线程中级篇(1) 线程状态</h1><div class="post-meta">Apr 25, 2018<span> | </span><span class="category"><a href="/categories/并发编程/">并发编程</a></span><script src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><div class="clear"><div class="toc-article" id="toc"><div class="toc-title">文章目录</div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#线程状态"><span class="toc-number">1.</span> <span class="toc-text">线程状态</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#线程状态迁移"><span class="toc-number">1.1.</span> <span class="toc-text">线程状态迁移</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#状态变化过程"><span class="toc-number">1.2.</span> <span class="toc-text">状态变化过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#相关方法"><span class="toc-number">1.3.</span> <span class="toc-text">相关方法</span></a></li></ol></li></ol></div></div><div class="post-content"><h2 id="线程状态"><a href="#线程状态" class="headerlink" title="线程状态"></a>线程状态</h2><p>一个新线程启动后，从开始运行一直到最后任务执行完成销毁这个线程，在整个线程生命周期中有哪几个状态，各个状态之间如何流转，本文将给出详细解释。</p>
+<h3 id="线程状态迁移"><a href="#线程状态迁移" class="headerlink" title="线程状态迁移"></a>线程状态迁移</h3><p>下面的这个线程状态迁移图是比较经典的，画的很详细，理解了这幅图就理解了线程状态变化。</p>
+<p><img src="/images/thread_state.png" alt="图1-线程状态迁移图"></p>
+<p>线程的几个状态</p>
+<ul>
+<li>[new]：初始状态，新建一个线程对象后的状态；</li>
+<li>[runnable]：就绪状态，调用了start()方法后，线程等待CPU资源准备执行的状态；</li>
+<li>[running]：运行状态，得到了CPU时间片，执行run()方法或者call()方法；</li>
+<li>[dead]：销毁状态，线程任务执行结束或者强制退出后的状态；</li>
+<li>[blocked]：阻塞状态，被动失去CPU时间片，等待进入runnable状态；</li>
+<li>[waiting]：等待状态，主动失去CPU时间片，等待进入runnable状态；</li>
+</ul>
+<blockquote>
+<p>waiting状态和blocked状态的区别在于一个是主动交出时间片，另外一个是被动交出时间片；当然前提是已经获得了时间片开始执行；从runnable状态到running状态是不受程序控制的，完全靠操作系统来调度，虽然我们可以设置线程的优先级，但是不一定达到预期。</p>
+</blockquote>
+<h3 id="状态变化过程"><a href="#状态变化过程" class="headerlink" title="状态变化过程"></a>状态变化过程</h3><ul>
+<li>[new]：MyThread thread = new MyThread();</li>
+<li>[new]-&gt;[runnable]：thread.start();</li>
+<li>[runnable]-&gt;[running]：操作系统调度，runnable状态意味着任务已经做好执行的准备，但什么时间真正执行（获得时间片）需要由操作系统来控制，任务本身无法控制；</li>
+<li>[running]-&gt;[dead]：线程执行完成；</li>
+<li>[running]-&gt;[runnable]：<ul>
+<li>Thread.yield(); 调用yield()方法将失去时间片，但是可以立刻进入runnable状态，运气好的话可以立刻又获得时间片进入running状态；yield()给其他任务以执行的机会；</li>
+</ul>
+</li>
+<li>[running]-&gt;[waiting]：<ul>
+<li>thread.join();调用join()方法将失去时间片，进入waiting状态，等到thread线程执行完毕后进入runnable状态；</li>
+<li>object.wait(); 调用 wait()方法将失去时间片，进入waiting状态，得到其他线程执行object.notify()方法是进入runnable状态；</li>
+<li>Thread.sleep(); 调用sleep()方法将失去时间片，进入waiting状态，sleep结束后进入runnable状态；</li>
+</ul>
+</li>
+<li>[running]-&gt;[blocked]：进入synchronized(object){}语句块前检查object锁，如果object已经被锁定，那么当前线程进入blocked状态，当object锁被释放后，当前线程进入runnable状态；</li>
+<li>[waiting]-&gt;[runnable]：<ul>
+<li>thread.join(); 引发的，其他线程执行完成后进入runnable状态；</li>
+<li>object.wait(); 引发的，其他线程调用object.notify()或者object.notifyAll()后进入runnable状态；</li>
+</ul>
+</li>
+<li>[blocked]-&gt;[runnable]：其他线程退出synchronized{}语句块以后进入runnable状态；</li>
+</ul>
+<p>我们再通过表格的形式来看一下线程状态变化过程</p>
+<table>
+<thead>
+<tr>
+<th>方法调用</th>
+<th>线程旧状态</th>
+<th>线程新状态</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>new Thread();</td>
+<td></td>
+<td>new</td>
+<td></td>
+</tr>
+<tr>
+<td>thread.start();</td>
+<td>new</td>
+<td>runnable</td>
+<td></td>
+</tr>
+<tr>
+<td>Thread.yield();</td>
+<td>running</td>
+<td>runnable</td>
+<td></td>
+</tr>
+<tr>
+<td>thread.join();</td>
+<td>running</td>
+<td>waiting</td>
+<td></td>
+</tr>
+<tr>
+<td>Thread.sleep();</td>
+<td>running</td>
+<td>waiting</td>
+<td></td>
+</tr>
+<tr>
+<td>object.wait();</td>
+<td>running</td>
+<td>waiting</td>
+<td></td>
+</tr>
+<tr>
+<td>synchronized(object){}</td>
+<td>running</td>
+<td>blocked</td>
+<td></td>
+</tr>
+<tr>
+<td>thread.interrupt();</td>
+<td>running</td>
+<td>dead</td>
+<td></td>
+</tr>
+<tr>
+<td>子线程执行完成</td>
+<td>waiting</td>
+<td>runnable</td>
+<td>外部线程</td>
+</tr>
+<tr>
+<td>Sleep()时间到</td>
+<td>waiting</td>
+<td>runnable</td>
+<td></td>
+</tr>
+<tr>
+<td>object.notify()或notifyAll();</td>
+<td>waiting</td>
+<td>runnable</td>
+<td>外部线程</td>
+</tr>
+<tr>
+<td>退出synchronized代码块</td>
+<td>blocked</td>
+<td>runnable</td>
+<td>外部线程</td>
+</tr>
+</tbody>
+</table>
+<p>个人理解，waiting状态和blocked状态的区别并不大，粗一点的话可以不区分它们。</p>
+<h3 id="相关方法"><a href="#相关方法" class="headerlink" title="相关方法"></a>相关方法</h3><p>Thread类和Object类相关方法</p>
+<blockquote>
+<p> 注意：区分Thread类和Object类的方法，区分静态方法和普通方法。</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> java.lang;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Thread</span> <span class="keyword">implements</span> <span class="title">Runnable</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">native</span> Thread <span class="title">currentThread</span><span class="params">()</span></span>;</span><br><span class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">yield</span><span class="params">()</span></span>;</span><br><span class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">sleep</span><span class="params">(<span class="keyword">long</span> millis)</span> <span class="keyword">throws</span> InterruptedException</span>;  </span><br><span class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">start</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    	start0();  </span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">interrupt</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      	interrupt0();</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">setPriority</span><span class="params">(<span class="keyword">int</span> newPriority)</span> </span>&#123;</span><br><span class="line">      	setPriority0(priority = newPriority);</span><br><span class="line">    &#125;</span><br><span class="line">  	<span class="function"><span class="keyword">private</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">start0</span><span class="params">()</span></span>;</span><br><span class="line">  	<span class="function"><span class="keyword">private</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">interrupt0</span><span class="params">()</span></span>;</span><br><span class="line">  	<span class="function"><span class="keyword">private</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">setPriority0</span><span class="params">(<span class="keyword">int</span> newPriority)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> java.lang;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Object</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">notify</span><span class="params">()</span></span>;</span><br><span class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">notifyAll</span><span class="params">()</span></span>;</span><br><span class="line">  	<span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">native</span> <span class="keyword">void</span> <span class="title">wait</span><span class="params">(<span class="keyword">long</span> timeout)</span> <span class="keyword">throws</span> InterruptedException</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>以上可以看出，所有的关键方法都是native的，基于系统底层实现的。</p>
+</div><div class="tags"><a href="/tags/并发/">并发</a><a href="/tags/多线程/">多线程</a></div><div class="post-nav"><a class="pre" href="/2018/04/27/thread-catalog/">【置顶】Java多线程</a><a class="next" href="/2018/04/24/thread-basic-threadpoolexecutor/">多线程基础篇(3) ThreadPoolExecutor</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"/><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/JAVA/">JAVA</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/WEB/">WEB</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/分布式/">分布式</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/工具/">工具</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/并发编程/">并发编程</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/设计模式/">设计模式</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/内存模型/" style="font-size: 15px;">内存模型</a> <a href="/tags/hexo/" style="font-size: 15px;">hexo</a> <a href="/tags/mq/" style="font-size: 15px;">mq</a> <a href="/tags/rocketmq/" style="font-size: 15px;">rocketmq</a> <a href="/tags/并发/" style="font-size: 15px;">并发</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/线程池/" style="font-size: 15px;">线程池</a> <a href="/tags/排队策略/" style="font-size: 15px;">排队策略</a> <a href="/tags/饱和策略/" style="font-size: 15px;">饱和策略</a> <a href="/tags/多线程/" style="font-size: 15px;">多线程</a> <a href="/tags/单例/" style="font-size: 15px;">单例</a> <a href="/tags/线程安全/" style="font-size: 15px;">线程安全</a> <a href="/tags/任务调度/" style="font-size: 15px;">任务调度</a> <a href="/tags/synchronized/" style="font-size: 15px;">synchronized</a> <a href="/tags/wait/" style="font-size: 15px;">wait</a> <a href="/tags/notify/" style="font-size: 15px;">notify</a> <a href="/tags/github/" style="font-size: 15px;">github</a> <a href="/tags/内存可见性/" style="font-size: 15px;">内存可见性</a> <a href="/tags/指令重排序/" style="font-size: 15px;">指令重排序</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/WEB/" style="font-size: 15px;">WEB</a> <a href="/tags/短地址/" style="font-size: 15px;">短地址</a> <a href="/tags/哈希/" style="font-size: 15px;">哈希</a> <a href="/tags/hashCode/" style="font-size: 15px;">hashCode</a> <a href="/tags/JAVA/" style="font-size: 15px;">JAVA</a> <a href="/tags/Hashmap/" style="font-size: 15px;">Hashmap</a> <a href="/tags/哈希冲突/" style="font-size: 15px;">哈希冲突</a> <a href="/tags/Database/" style="font-size: 15px;">Database</a> <a href="/tags/Sharding/" style="font-size: 15px;">Sharding</a> <a href="/tags/分布式/" style="font-size: 15px;">分布式</a> <a href="/tags/SnowFlake/" style="font-size: 15px;">SnowFlake</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/05/08/java-batis-hashmap/">HashMap源码分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/07/database-theory/">数据库原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/07/web-short-url/">从短地址说起</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/04/mysql-index/">MySQL索引</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/performance-linux/">性能调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/distributed-system-lock/">分布式锁</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/distributed-system-unique-id/">分布式ID生成器</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/database-sharding/">数据库水平拆分</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/mysql-rules/">MySQL使用规范</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/02/design-pattern-singleton/">Singleton</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://github.com/waterlu" title="waterlu's github" target="_blank">waterlu's github</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2018 <a href="/." rel="nofollow">Waterlu's Blog.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>

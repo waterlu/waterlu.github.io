@@ -1,0 +1,98 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="个人技术博客"><title>数据库水平拆分 | Waterlu's Blog</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/8.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">数据库水平拆分</h1><a id="logo" href="/.">Waterlu's Blog</a><p class="description">以铜为鉴，可正衣冠；以史为鉴，可知兴替；以人为鉴，可明得失。</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">数据库水平拆分</h1><div class="post-meta">May 3, 2018<span> | </span><span class="category"><a href="/categories/数据库/">数据库</a></span><script src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><div class="clear"><div class="toc-article" id="toc"><div class="toc-title">文章目录</div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#数据库拆分"><span class="toc-number">1.</span> <span class="toc-text">数据库拆分</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#垂直拆分"><span class="toc-number">1.1.</span> <span class="toc-text">垂直拆分</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#水平拆分"><span class="toc-number">1.2.</span> <span class="toc-text">水平拆分</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#数据库分片"><span class="toc-number">2.</span> <span class="toc-text">数据库分片</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#用户表"><span class="toc-number">2.1.</span> <span class="toc-text">用户表</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#背景"><span class="toc-number">2.1.1.</span> <span class="toc-text">背景</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#方案"><span class="toc-number">2.1.2.</span> <span class="toc-text">方案</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#问题"><span class="toc-number">2.1.3.</span> <span class="toc-text">问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#解决"><span class="toc-number">2.1.4.</span> <span class="toc-text">解决</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#前端需求"><span class="toc-number">2.1.4.1.</span> <span class="toc-text">前端需求</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#后端需求"><span class="toc-number">2.1.4.2.</span> <span class="toc-text">后端需求</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#帖子中心"><span class="toc-number">2.2.</span> <span class="toc-text">帖子中心</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#订单中心"><span class="toc-number">2.3.</span> <span class="toc-text">订单中心</span></a></li></ol></li></ol></div></div><div class="post-content"><h2 id="数据库拆分"><a href="#数据库拆分" class="headerlink" title="数据库拆分"></a>数据库拆分</h2><h3 id="垂直拆分"><a href="#垂直拆分" class="headerlink" title="垂直拆分"></a>垂直拆分</h3><p>数据库垂直拆分就是要把表按模块划分到不同数据库中。微服务架构中每个服务拥有自己独立的数据库，就是典型的垂直拆分。通俗说，就是根据业务类型，把一个数据库中的多张表拆分到多个数据库中，这样不同数据库的数据量和压力不同，可以有针对性的进行优化。</p>
+<h3 id="水平拆分"><a href="#水平拆分" class="headerlink" title="水平拆分"></a>水平拆分</h3><p>垂直拆分只是把一张表拆分到另一个数据库实例中，并不会把一张表拆分为多张表。当单表的数据量增加到千万量级以上时，就需要拆表了，成为数据库水平拆分，也叫做数据库分片或者Sharding。</p>
+<p>通常，我们认为MySQL数据库单表数据量在百万级，经过索引优化后查询效率是没有问题的。但是当数据量超过千万时，就需要考虑拆分了，如果超过五千万就肯定要拆表了。</p>
+<h2 id="数据库分片"><a href="#数据库分片" class="headerlink" title="数据库分片"></a>数据库分片</h2><p>数据库垂直拆分相对简单一些，分片就复杂多了，本文主要讨论数据库分片遇到的各种问题和解决方案。</p>
+<p>一般我们根据表的主键和数据类型的不同来进行表的拆分，下面分别以用户表、帖子表和订单表为例，介绍如何进行拆分表拆分的三种方法。</p>
+<h3 id="用户表"><a href="#用户表" class="headerlink" title="用户表"></a>用户表</h3><p>用户表是典型的1对1例子，也就是说表的主键是user_id，1个用户只有1条记录。</p>
+<h4 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h4><p>用户表保存用户姓名、手机号码、登录名、登录密码等基本信息，主键是user_id。在业务初期，单库单表就能满足需求，但随着数据量越来越大，需要对数据库进行水平切分，常见的方法有范围法和取模法。</p>
+<h4 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h4><p>一、范围法：</p>
+<p>将user_id设计为long型，根据user_id值的范围不同进行拆分。例如：1~1000万存储到db1中，1000万~2000万存储到db2中。</p>
+<ul>
+<li>好处：<ul>
+<li>简单，读写时根据user_id可以迅速定位数据在哪个db上；</li>
+<li>扩容简单，对历史数据无影响；每增加1000万用户，增加一个db即可。</li>
+</ul>
+</li>
+<li><p>坏处：</p>
+<ul>
+<li><p>user_id必须是整数，且自增；</p>
+</li>
+<li><p>数据量不均匀，前面的db满了才会新增db，新增db数据量小；</p>
+</li>
+<li><p>访问量不均匀，一般新注册用户活跃度高，新db的负载比旧db负载高。</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>二、哈希法：</p>
+<p>对user_id取模，除以总共的db个数，根据mod值分配db。如果user_id是字符串，可以先计算出哈希值，然后再根据哈希值取模。例如：5个数据库，user_id以1/6结尾的存储到db1中，以2/7结尾的存储到db2中，依次类推（是不是可以简称为限行算法？）。</p>
+<ul>
+<li>好处：<ul>
+<li>简单，最多计算user_id的哈希值就可以确定db位置；</li>
+<li>数据均匀，哈希值均匀分布可以保证数据均匀分布到各个db上；</li>
+<li>访问量均匀，理由同上；</li>
+</ul>
+</li>
+<li>坏处：<ul>
+<li>扩容复杂，扩容以后可能引起数据迁移，如何平滑进行数据迁移是一个问题。</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<ol>
+<li>每次2倍扩容：概率上有一半的数据不用迁移。例如：开始2个数据库，1/3/5/7/9在db1上，2/4/6/8/10在db2上；扩容2倍到4个数据库，1/5/9还在db1上，2/6/10还在db2上，60%的数据不用迁移，需要做的是把3/7移动到db3上，4/8移动到db4上。</li>
+</ol>
+<ol start="2">
+<li>一致性哈希：一致性哈希算法可以保证增加和减少数据库数量时，尽量少的数据需要迁移。不过一致性哈希一般基数需要大一些效果才好，至少32或64起步吧，也就是说上来就开64个数据库，相当于单表数据量在10亿量级。所以，2倍扩容应该更常见。</li>
+</ol>
+</blockquote>
+<h4 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h4><p>根据user_id分表以后带来的问题：</p>
+<ul>
+<li>用户登录操作，需要根据登录名读取登录密码，现在有多张用户表，怎么办？都读取一遍？</li>
+<li>同样，还有根据用户手机号码查询用户信息的需求？</li>
+<li>此外，管理后台还有各种各样复杂、变态的查询需求，各种组合的，怎么办？</li>
+</ul>
+<h4 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h4><p>先把查询需求分为前端需求和后台需求两种，使用不同的解决方案。</p>
+<p>前端需求：通过登录名和手机号码查询用户，采用建立非主键属性到主键映射关系的方案。</p>
+<p>后台需求：各种各样的复杂需求，采用前后端分离方案。</p>
+<h5 id="前端需求"><a href="#前端需求" class="headerlink" title="前端需求"></a>前端需求</h5><p><strong>根据手机号码查询</strong></p>
+<p>以根据user_phone查询user表为例。</p>
+<p>建一张user_phone_id表，主键是user_phone，内容字段是user_id。查询时先通过user_phone查询user_phone_id表找到user_id，然后再根据user_id找到用户信息。user_phone_id表可以不分片。</p>
+<p>考虑性能，也可以把user_phone_id表的信息缓存在redis中，如果redis缓存不命中，再查数据库。</p>
+<blockquote>
+<p>user_phone和user_id的对应关系一旦建立很少改变，适合做缓存。</p>
+</blockquote>
+<p><strong>根据登录名查询</strong></p>
+<p>假设查询字段是user_login_name，当然可以使用和user_phone相同的方法。如果user_login_name字段不是用户输入的，是系统自动生成的，那么我们有更简便的方法。</p>
+<p>缓存的出发点是空间换时间，预先把对应关系保存起来。另外一种思路就是设计一个函数f(x)，保证f(user_login_name)=user_id，这样我们就不用查数据库了，直接结算就可以得到user_id。实际上我们不需要f(x)=user_id，因为我们不关心user_id具体是什么，我们只关系user_id在哪个db上，或者更专业点，在哪个数据库分片上。所以，我们只需要设计f(user_login_name)=db_sharding即可。这就简单了，我们创建用户记录时，根据user_id计算出db_sharding的值，然后放到user_login_name中就可以了。</p>
+<p><img src="/images/database-partition-user-gene.jpg" alt=""></p>
+<p>如上图所示，最后三个字节保存的是user_id在那个db上（一共8个分片）。当根据登录名查询时，截取后三位就知道应该去哪个数据库查询了。</p>
+<blockquote>
+<p>这种做法，需要考虑如果出现数据迁移怎么办，最好确定分片后就不变了。</p>
+</blockquote>
+<h5 id="后端需求"><a href="#后端需求" class="headerlink" title="后端需求"></a>后端需求</h5><p>上面都是单条数据的查询，那批量查询怎么办？回想一下，前端用户只能查询自己的数据，只有运营后台才可以批量查询用户数据，后端需要采用不同的策略。</p>
+<p><img src="/images/database-partition-user-fb.png" alt=""></p>
+<p>水平切分的目的是为了提高访问速度，后台查询条件复杂，对响应时间要求不高，所以不用分库，从前端通过MQ同步数据即可。MQ同步数据机制建立以后，也可以同步到Hive等其他存储结构中。</p>
+<h3 id="帖子中心"><a href="#帖子中心" class="headerlink" title="帖子中心"></a>帖子中心</h3><p>1对多。</p>
+<h3 id="订单中心"><a href="#订单中心" class="headerlink" title="订单中心"></a>订单中心</h3><p>以order表为例</p>
+<p>order_id</p>
+<p>user_id</p>
+<p>product_id</p>
+<p>首先，区分前端访问和后台访问。前端访问指用户的访问，用户下单后需要查询订单，查询条件比较简单，一般只能查询自己的订单，但是响应速度要求要快。后台访问指运营人员对订单的查询，一般查询条件比较复杂，但实时性要求低一些。</p>
+<p><img src="/images/database-partition-order-fb.png" alt="img"></p>
+<p>如图所示，order-center提供前端服务，order-center对应的数据库进行了水平切分；order-back提供后台服务，这里显示的存储方案是ES或者Hive，其实也可以是MySQL，总之后台服务的存储数据结构不依赖于前端，可以根据实际业务需求进行选择。如果选择了MySQL，后台存储可以选择不分库，因为后台需求往往逻辑比较复杂，但是对响应性要求不高。</p>
+<p>前后端数据同步可以通过开源的中间件来实现，更多的时候像图中一样，通过MQ来同步。MQ异步同步意味着数据是有延迟的。MQ要保证数据送到的可靠性和幂等性。</p>
+<p>不只是订单服务，后台可以把所有前端服务产生的数据都汇总到一个库中，可以是原始数据直接进入，也可以是经过order-back处理后的数据进入。（看上去有点像数据仓库了。）</p>
+<p>接下来看，前端的数据库存储如何做水平拆分。</p>
+<p>这里有一个前提，前端用户查询的都是自己的订单，不能查询别人的订单。这样，我们就可以根据user_id来分库。例如：如果分为4个库，那么最简单的办法对user_id % 4，来确定订单数据落在那个schema上面。实际操作中，我们是通过主键order_id来做水平切分的，所以要保证order_id和user_id的切分一致。所以在生成订单时，可以让order_id的最后两位和user_id 的最后两位一致，或者最简单order_id=timestamp+user_id，这样取模就肯定和user_id一致了。</p>
+<p><a href="https://mp.weixin.qq.com/s/PCzRAZa9n4aJwHOX-kAhtA" target="_blank" rel="noopener">https://mp.weixin.qq.com/s/PCzRAZa9n4aJwHOX-kAhtA</a></p>
+<p><a href="https://blog.csdn.net/admin1973/article/details/74923283" target="_blank" rel="noopener">https://blog.csdn.net/admin1973/article/details/74923283</a></p>
+<p><a href="https://blog.csdn.net/jiangzhexi/article/details/76794801" target="_blank" rel="noopener">https://blog.csdn.net/jiangzhexi/article/details/76794801</a></p>
+<p><a href="https://blog.csdn.net/admin1973/article/details/77713716" target="_blank" rel="noopener">https://blog.csdn.net/admin1973/article/details/77713716</a></p>
+</div><div class="tags"><a href="/tags/MySQL/">MySQL</a><a href="/tags/Database/">Database</a><a href="/tags/Sharding/">Sharding</a></div><div class="post-nav"><a class="pre" href="/2018/05/03/distributed-system-unique-id/">分布式ID生成器</a><a class="next" href="/2018/05/03/mysql-rules/">MySQL使用规范</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"/><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/JAVA/">JAVA</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/WEB/">WEB</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/分布式/">分布式</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/工具/">工具</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/并发编程/">并发编程</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/设计模式/">设计模式</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/内存模型/" style="font-size: 15px;">内存模型</a> <a href="/tags/hexo/" style="font-size: 15px;">hexo</a> <a href="/tags/mq/" style="font-size: 15px;">mq</a> <a href="/tags/rocketmq/" style="font-size: 15px;">rocketmq</a> <a href="/tags/并发/" style="font-size: 15px;">并发</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/线程池/" style="font-size: 15px;">线程池</a> <a href="/tags/排队策略/" style="font-size: 15px;">排队策略</a> <a href="/tags/饱和策略/" style="font-size: 15px;">饱和策略</a> <a href="/tags/多线程/" style="font-size: 15px;">多线程</a> <a href="/tags/单例/" style="font-size: 15px;">单例</a> <a href="/tags/线程安全/" style="font-size: 15px;">线程安全</a> <a href="/tags/任务调度/" style="font-size: 15px;">任务调度</a> <a href="/tags/synchronized/" style="font-size: 15px;">synchronized</a> <a href="/tags/wait/" style="font-size: 15px;">wait</a> <a href="/tags/notify/" style="font-size: 15px;">notify</a> <a href="/tags/github/" style="font-size: 15px;">github</a> <a href="/tags/内存可见性/" style="font-size: 15px;">内存可见性</a> <a href="/tags/指令重排序/" style="font-size: 15px;">指令重排序</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/WEB/" style="font-size: 15px;">WEB</a> <a href="/tags/短地址/" style="font-size: 15px;">短地址</a> <a href="/tags/哈希/" style="font-size: 15px;">哈希</a> <a href="/tags/hashCode/" style="font-size: 15px;">hashCode</a> <a href="/tags/JAVA/" style="font-size: 15px;">JAVA</a> <a href="/tags/Hashmap/" style="font-size: 15px;">Hashmap</a> <a href="/tags/哈希冲突/" style="font-size: 15px;">哈希冲突</a> <a href="/tags/Database/" style="font-size: 15px;">Database</a> <a href="/tags/Sharding/" style="font-size: 15px;">Sharding</a> <a href="/tags/分布式/" style="font-size: 15px;">分布式</a> <a href="/tags/SnowFlake/" style="font-size: 15px;">SnowFlake</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/05/08/java-batis-hashmap/">HashMap源码分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/07/database-theory/">数据库原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/07/web-short-url/">从短地址说起</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/04/mysql-index/">MySQL索引</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/performance-linux/">性能调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/distributed-system-lock/">分布式锁</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/distributed-system-unique-id/">分布式ID生成器</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/database-sharding/">数据库水平拆分</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/mysql-rules/">MySQL使用规范</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/02/design-pattern-singleton/">Singleton</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://github.com/waterlu" title="waterlu's github" target="_blank">waterlu's github</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2018 <a href="/." rel="nofollow">Waterlu's Blog.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>

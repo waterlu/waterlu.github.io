@@ -1,0 +1,73 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="个人技术博客"><title>多线程中级篇(3) Java内存模型 | Waterlu's Blog</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/8.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">多线程中级篇(3) Java内存模型</h1><a id="logo" href="/.">Waterlu's Blog</a><p class="description">以铜为鉴，可正衣冠；以史为鉴，可知兴替；以人为鉴，可明得失。</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">多线程中级篇(3) Java内存模型</h1><div class="post-meta">Apr 28, 2018<span> | </span><span class="category"><a href="/categories/并发编程/">并发编程</a></span><script src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><div class="clear"><div class="toc-article" id="toc"><div class="toc-title">文章目录</div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#内存模型"><span class="toc-number">1.</span> <span class="toc-text">内存模型</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#内存可见性"><span class="toc-number"></span> <span class="toc-text">内存可见性</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#禁止重排序"><span class="toc-number"></span> <span class="toc-text">禁止重排序</span></a></div></div><div class="post-content"><h2 id="内存模型"><a href="#内存模型" class="headerlink" title="内存模型"></a>内存模型</h2><p>什么是内存模型？首先，不要和JVM运行时数据区混淆了。JVM运行时数据区描述的是堆、栈等内存空间的组成，而内存模型是和多线程息息相关的，解决的是可见性和线程安全问题。 </p>
+<p><img src="/images/thread_jmm.png" alt="图1-Java内存模型"></p>
+<p>上图描述了Java内存模型，</p>
+<p><a href="http://tutorials.jenkov.com/java-concurrency/" target="_blank" rel="noopener">http://tutorials.jenkov.com/java-concurrency/</a></p>
+<p><a href="https://blog.csdn.net/suifeng3051" target="_blank" rel="noopener">https://blog.csdn.net/suifeng3051</a></p>
+<p><a href="https://www.jianshu.com/u/f8e9b1c246f1" target="_blank" rel="noopener">https://www.jianshu.com/u/f8e9b1c246f1</a></p>
+<p>重排序：</p>
+<p>编译器重排序</p>
+<p>处理器重排序</p>
+<p>volatile解决的是多线程之间读的可见性问题，如果只有一个线程写共享变量，多个线程读取共享变量，那么volatile可以保证读线程能够即使读取到共享变量的最新值，也就是说，一旦写线程修改了共享变量的值，那么读线程可以立即读取到最新的值，没有脏读。</p>
+<p>但是，volatile不是用来解决多线程一起写的。只有在一种情况下，使用volatile多线程写共享变量不会出问题，那就是共享变量的新值与旧值没有关联，或者说新值是直接设置的，不需要通过旧值计算得到，这个时候即使有多线程写，volatile共享变量也是正确的。</p>
+<p>实际情况中，这样的场景并不常见，多数场景新值都是依赖于旧值的。</p>
+<p>volatile可以保证一旦写了，其他线程可以立即读取到；但是如果写之前其他线程做了读取操作，然后再一起写，这样就出问题了。</p>
+<p>从内存语义的角度来说，volatile的写-读与锁的释放-获取有相同的内存效果</p>
+<p>当写一个volatile变量时，JMM会把该线程对应的本地内存中的共享变量值刷新到主内存</p>
+<p>当读一个volatile变量时，JMM会把该线程对应的本地内存中的值置为无效，从主内存中读取共享变量</p>
+<p>Load1 LoadLoad Load2    确保Load1在Load2之前加载（从主内存读取到工作内存）</p>
+<p>Store1 StoreStore Store2    确保Store1在Store2之前存储（从工作内存回写到主内存）</p>
+<p>Load1 LoadStore Store2    先加载Load1，然后在存储Store2</p>
+<p>Store1 StoreLoad Load2    最重要，刷新工作内存中所有共享变量到主内存，然后再读取</p>
+<p>为实现volatile的内存语义，编译器在生成字节码时，会在指令序列中插入内存屏障来禁止特定类型的处理器重排序。</p>
+<p>在每一个volatile写操作前面插入StoreStore，后面插入StoreLoad</p>
+<p>在每一个volatile</p>
+<p><a href="https://sourceforge.net/projects/fcml/files/fcml-1.1.1/hsdis-1.1.1-win32-amd64.zip/download" target="_blank" rel="noopener">https://sourceforge.net/projects/fcml/files/fcml-1.1.1/hsdis-1.1.1-win32-amd64.zip/download</a></p>
+<p>java -XX:+UnlockDiagnosticVMOptions -XX:+PrintAssembly -Xcomp VolatileExample$Task &gt; VolatileExample$Task.asm</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-Xcomp -XX:+UnlockDiagnosticVMOptions -XX:+PrintAssembly -XX:CompileCommand=compileonly,*LazySingleton.getInstance</span><br></pre></td></tr></table></figure>
+<p>-Xcomp -XX:+UnlockDiagnosticVMOptions -XX:+PrintAssembly -XX:CompileCommand=compileonly</p>
+<p>Object    wait(), notify(), notifyAll()</p>
+<p>必须先获得锁，然后才可以调用wait()和notify()方法</p>
+<p>Spurious Wakeup</p>
+<p>虚假唤醒，没有notify()，wait()就被唤醒。为避免这个问题，使用while()进行判断，不要使用if()进行判断。</p>
+<p>注意：使用Object.wait()方法时，这个Object可以是任何对象，但不要使用字符串常量和全局对象。因为字符串常量内部会指向同一个对象。</p>
+<p>原本是两个对象，两个锁。但是实际上引用指向一个对象。可能引发问题。如果使用notifyAll()还没有什么大问题，如果使用notify()就有问题了。</p>
+<p>Synchronized 语句块是可以重入的(reentrance)</p>
+<p>一旦一个共享变量（类的成员变量、 类的静态成员变量） 被 volatile 修饰之后， 那么就具备了两层语义：</p>
+<ul>
+<li>保证了不同线程对这个变量进行读取时的可见性， 即一个线程修改了某个变量的值， 这新值对其他线程来说是立即可见的。 (volatile 解决了线程间共享变量的可见性问题)。</li>
+<li>禁止进行指令重排序， 阻止编译器对代码的优化。</li>
+</ul>
+<h1 id="内存可见性"><a href="#内存可见性" class="headerlink" title="内存可见性"></a>内存可见性</h1><ul>
+<li>第一： 使用 volatile 关键字会强制将修改的值立即写入主存；</li>
+<li>第二： 使用 volatile 关键字的话， 当线程 2 进行修改时， 会导致线程 1 的工作内存中缓存变量 stop 的缓存行无效（反映到硬件层的话， 就是 CPU 的 L1或者 L2 缓存中对应的缓存行无效） ；</li>
+<li>第三： 由于线程 1 的工作内存中缓存变量 stop 的缓存行无效， 所以线程 1再次读取变量 stop 的值时会去主存读取。</li>
+</ul>
+<p>那么， 在线程 2 修改 stop 值时（当然这里包括 2 个操作， 修改线程 2 工作内存中的值， 然后将修改后的值写入内存） ， 会使得线程 1 的工作内存中缓存变量 stop 的缓存行无效， 然后线程 1 读取时， 发现自己的缓存行无效， 它会等待缓存行对应的主存地址被更新之后， 然后去对应的主存读取最新的值。</p>
+<h1 id="禁止重排序"><a href="#禁止重排序" class="headerlink" title="禁止重排序"></a>禁止重排序</h1><p>volatile 关键字禁止指令重排序有两层意思：</p>
+<ul>
+<li>当程序执行到 volatile 变量的读操作或者写操作时， 在其前面的操作的更改肯定全部已经进行， 且结果已经对后面的操作可见； 在其后面的操作肯定还没有进行</li>
+<li>在进行指令优化时， 不能把 volatile 变量前面的语句放在其后面执行，也不能把 volatile 变量后面的语句放到其前面执行。</li>
+</ul>
+<p>为了实现 volatile 的内存语义， 加入 volatile 关键字时， 编译器在生成字节码时，会在指令序列中插入内存屏障， 会多出一个 lock 前缀指令。 内存屏障是一组处理器指令， 解决禁止指令重排序和内存可见性的问题。 编译器和 CPU 可以在保证输出结果一样的情况下对指令重排序， 使性能得到优化。 处理器在进行重排序时是会考虑指令之间的数据依赖性。</p>
+<p>内存屏障， 有 2 个作用：</p>
+<ul>
+<li>1.先于这个内存屏障的指令必须先执行， 后于这个内存屏障的指令必须后执行。</li>
+<li>2.使得内存可见性。 所以， 如果你的字段是 volatile， 在读指令前插入读屏障， 可以让高速缓存中的数据失效， 重新从主内存加载数据。 在写指令之后插入写屏障， 能让写入缓存的最新数据写回到主内存。</li>
+</ul>
+<p>lock 前缀指令在多核处理器下会引发了两件事情：</p>
+<p>1.将当前处理器中这个变量所在缓存行的数据会写回到系统内存。 这个写回内存的<br>操作会引起在其他 CPU 里缓存了该内存地址的数据无效。 但是就算写回到内存， 如果其他处理器缓存的值还是旧的， 再执行计算操作就会有问题， 所以在多处理器下， 为了保证各个处理器的缓存是一致的， 就会实现缓存一致性协议， 每个处理器通过嗅探在总线上传播的数据来检查自己缓存的值是不是过期了， 当处理器发现自己缓存行对应的内存地址被修改， 就会将当前处理器的缓存行设置成无效状态， 当处理器要对这个数据进行修改操作的时候， 会强制重新从系统内存里把数据读到处理器缓存里</p>
+<p>2.它确保指令重排序时不会把其后面的指令排到内存屏障之前的位置， 也不会把前面的指令排到内存屏障的后面； 即在执行到内存屏障这句指令时， 在它前面的操作已经全部完成。</p>
+<p>内存屏障可以被分为以下几种类型：</p>
+<ul>
+<li>LoadLoad 屏障： 对于这样的语句 Load1; LoadLoad; Load2， 在 Load2 及后续读取操作要读取的数据被访问前， 保证 Load1 要读取的数据被读取完毕。</li>
+<li>StoreStore 屏障： 对于这样的语句 Store1; StoreStore; Store2， 在 Store2 及后续写入操作执行前， 保证 Store1 的写入操作对其它处理器可见。</li>
+<li>LoadStore 屏障： 对于这样的语句 Load1; LoadStore; Store2， 在 Store2 及后续写入操作被刷出前， 保证 Load1 要读取的数据被读取完毕。</li>
+<li>StoreLoad 屏障： 对于这样的语句 Store1; StoreLoad; Load2， 在 Load2 及后续所有读取操作执行前， 保证 Store1 的写入对所有处理器可见。 它的开销是四种屏障中最大的。 在大多数处理器的实现中， 这个屏障是个万能屏障， 兼具其它三种内存屏障的功能。</li>
+</ul>
+</div><div class="tags"><a href="/tags/并发/">并发</a><a href="/tags/线程/">线程</a><a href="/tags/内存模型/">内存模型</a><a href="/tags/内存可见性/">内存可见性</a><a href="/tags/指令重排序/">指令重排序</a></div><div class="post-nav"><a class="pre" href="/2018/04/29/thread-advance-implementation/">多线程高级篇(2) 线程实现</a><a class="next" href="/2018/04/28/thread-interrupt/">多线程中级篇(2) 线程中断</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"/><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/JAVA/">JAVA</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/WEB/">WEB</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/分布式/">分布式</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/工具/">工具</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/并发编程/">并发编程</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">3</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/设计模式/">设计模式</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/内存模型/" style="font-size: 15px;">内存模型</a> <a href="/tags/hexo/" style="font-size: 15px;">hexo</a> <a href="/tags/mq/" style="font-size: 15px;">mq</a> <a href="/tags/rocketmq/" style="font-size: 15px;">rocketmq</a> <a href="/tags/并发/" style="font-size: 15px;">并发</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/线程池/" style="font-size: 15px;">线程池</a> <a href="/tags/排队策略/" style="font-size: 15px;">排队策略</a> <a href="/tags/饱和策略/" style="font-size: 15px;">饱和策略</a> <a href="/tags/多线程/" style="font-size: 15px;">多线程</a> <a href="/tags/单例/" style="font-size: 15px;">单例</a> <a href="/tags/线程安全/" style="font-size: 15px;">线程安全</a> <a href="/tags/任务调度/" style="font-size: 15px;">任务调度</a> <a href="/tags/synchronized/" style="font-size: 15px;">synchronized</a> <a href="/tags/wait/" style="font-size: 15px;">wait</a> <a href="/tags/notify/" style="font-size: 15px;">notify</a> <a href="/tags/github/" style="font-size: 15px;">github</a> <a href="/tags/内存可见性/" style="font-size: 15px;">内存可见性</a> <a href="/tags/指令重排序/" style="font-size: 15px;">指令重排序</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/WEB/" style="font-size: 15px;">WEB</a> <a href="/tags/短地址/" style="font-size: 15px;">短地址</a> <a href="/tags/哈希/" style="font-size: 15px;">哈希</a> <a href="/tags/hashCode/" style="font-size: 15px;">hashCode</a> <a href="/tags/JAVA/" style="font-size: 15px;">JAVA</a> <a href="/tags/Hashmap/" style="font-size: 15px;">Hashmap</a> <a href="/tags/哈希冲突/" style="font-size: 15px;">哈希冲突</a> <a href="/tags/Database/" style="font-size: 15px;">Database</a> <a href="/tags/Sharding/" style="font-size: 15px;">Sharding</a> <a href="/tags/分布式/" style="font-size: 15px;">分布式</a> <a href="/tags/SnowFlake/" style="font-size: 15px;">SnowFlake</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/05/08/java-batis-hashmap/">HashMap源码分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/07/database-theory/">数据库原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/07/web-short-url/">从短地址说起</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/04/mysql-index/">MySQL索引</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/performance-linux/">性能调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/distributed-system-lock/">分布式锁</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/distributed-system-unique-id/">分布式ID生成器</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/database-sharding/">数据库水平拆分</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/03/mysql-rules/">MySQL使用规范</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/02/design-pattern-singleton/">Singleton</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://github.com/waterlu" title="waterlu's github" target="_blank">waterlu's github</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2018 <a href="/." rel="nofollow">Waterlu's Blog.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
