@@ -1,0 +1,235 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="个人技术博客"><title>Java基础-反射 | Waterlu's Blog</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/8.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Java基础-反射</h1><a id="logo" href="/.">Waterlu's Blog</a><p class="description">以铜为鉴，可正衣冠；以史为鉴，可知兴替；以人为鉴，可明得失。</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">Java基础-反射</h1><div class="post-meta">May 28, 2018<span> | </span><span class="category"><a href="/categories/JAVA/">JAVA</a></span><script src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><div class="clear"><div class="toc-article" id="toc"><div class="toc-title">文章目录</div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Java反射机制"><span class="toc-number">1.</span> <span class="toc-text">Java反射机制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#什么是反射？"><span class="toc-number">1.1.</span> <span class="toc-text">什么是反射？</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#类对象"><span class="toc-number">1.1.1.</span> <span class="toc-text">类对象</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#动态加载"><span class="toc-number">1.1.2.</span> <span class="toc-text">动态加载</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#反射的使用"><span class="toc-number">1.2.</span> <span class="toc-text">反射的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Class"><span class="toc-number">1.2.1.</span> <span class="toc-text">Class</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Method"><span class="toc-number">1.2.2.</span> <span class="toc-text">Method</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Field"><span class="toc-number">1.2.3.</span> <span class="toc-text">Field</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#PropertyDescriptor"><span class="toc-number">1.2.4.</span> <span class="toc-text">PropertyDescriptor</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#反射包"><span class="toc-number">1.3.</span> <span class="toc-text">反射包</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#java-lang-Class"><span class="toc-number">1.3.1.</span> <span class="toc-text">java.lang.Class</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#java-lang-reflect-Constructor"><span class="toc-number">1.3.2.</span> <span class="toc-text">java.lang.reflect.Constructor</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#java-lang-reflect-Method"><span class="toc-number">1.3.3.</span> <span class="toc-text">java.lang.reflect.Method</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#java-lang-reflect-Field"><span class="toc-number">1.3.4.</span> <span class="toc-text">java.lang.reflect.Field</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#java-lang-reflect-InvocationHandler"><span class="toc-number">1.3.5.</span> <span class="toc-text">java.lang.reflect.InvocationHandler</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#java-lang-reflect-Proxy"><span class="toc-number">1.3.6.</span> <span class="toc-text">java.lang.reflect.Proxy</span></a></li></ol></li></ol></li></ol></div></div><div class="post-content"><h2 id="Java反射机制"><a href="#Java反射机制" class="headerlink" title="Java反射机制"></a>Java反射机制</h2><h3 id="什么是反射？"><a href="#什么是反射？" class="headerlink" title="什么是反射？"></a>什么是反射？</h3><p>反射是Java语言的一种特性，通过反射机制，应用程序可以在运行期动态读取类信息，并访问类实例、类成员方法和类成员变量。</p>
+<p>所谓反射，个人理解就是反向映射，反向自然是和正向相对的。所谓正向指在编译期就知道类的内部结构；所谓反向指在编译期不知道类的内部结构，在运行期动态加载类以后才知道类的内部结构是怎么样的。编译器不知道也无需知道实现类的内部细节，也就意味着解耦合。通常我们在应用程序中声明接口，运行时利用反射机制动态加载实现类，这样就实现了应用程序和具体实现类的解耦，当具体实现类的实现细节发生改变，甚至改变了实现类时，应用程序本身都不需要进行调整。</p>
+<p>反射非常非常重要，反射是Spring IoC和AOP的基础，也可以说反射是Spring框架的基础。IoC容器需要使用反射API来创建Bean对象，AOP中需要通过反射加载生成的代理类。</p>
+<h4 id="类对象"><a href="#类对象" class="headerlink" title="类对象"></a>类对象</h4><p>我们先来澄清一些概念：</p>
+<ul>
+<li><code>public class User {}</code> 我们称之为一个类，User类；</li>
+<li><code>private String name;</code> 我们称之为类的成员变量，name是User类的私有成员变量；</li>
+<li><code>public String getName() {}</code> 我们称之为类的成员方法，getName()是User类的公有成员方法；</li>
+<li><code>User user = new User();</code> 我们称之为创建了一个类实例对象，user对象是User类的一个实例对象。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> org.test;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> String name;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> name;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">User user = <span class="keyword">new</span> User();</span><br></pre></td></tr></table></figure>
+<p>我们知道user是User类的一个实例对象，那么什么是类对象呢？调用user对象的getClass()方法就返回一个类对象。注意：user是类实例对象，clazz是类对象，它们有什么区别呢？</p>
+<ul>
+<li>首先，user是User类的实例化，user对象的堆内存空间是User类的结构，里面保存name等属性；clazz是Class类的实例化，clazz对象的堆内存空间是Class类的接口，里面保存类名、类加载器、属性、方法等信息；</li>
+<li>每个类被JVM加载到内存后，都有对应的Class类对象，类对象的数据结构是相同，但属性值不同；每个类被JVM加载到内存后，也会生成类的实例对象，类的实例对象的数据结构是互不相同的；</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Class clazz = user.getClass();</span><br></pre></td></tr></table></figure>
+<p>我们有三种方法来获取一个类的类对象，最后一种就是通过反射获取到类对象，它是以后所有反射操作的基础。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">User user = <span class="keyword">new</span> User();</span><br><span class="line">Class c1 = User.class;</span><br><span class="line">Class c2 = user.getClass();</span><br><span class="line">Class c3 = Class.forName(<span class="string">"org.test.User"</span>);</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>TODO：以下挪到JVM-类加载器中</p>
+</blockquote>
+<p>我们知道在JVM规范中，User类信息存储方法区（method area）上，我们常用的Hotspot虚拟机把User类信息存储在堆的永久代上。User类对象在堆上创建，User类对象信息自然存储在堆上。user变量是对User类对象的应用，user变量存储在栈上。</p>
+<p><img src="/images/java-basic-reflect-class-object.png" alt=""></p>
+<p>user变量是一个引用，指向User类实例对象；User类实例对象的数据结构就是User类的数据结构；那么User类信息在永久代上具体是如何存储的呢？我们可以认为，永久代上存储的也是一个类对象，Class类的对象。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> java.lang;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">Class</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">transient</span> String name;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> ClassLoader classLoader;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们再来看一下<code>User user = new User();</code> 的执行过程：</p>
+<ul>
+<li>编译User.java生成User.class文件；</li>
+<li>JVM使用类加载器读取User.class文件，生成一个Class对象，放入永久代堆；</li>
+<li>JVM根据Class对象中的信息创建一个User类的实例对象，放入堆中；</li>
+<li>JVM在当前栈中添加user变量，指向堆中User类实例对象。</li>
+</ul>
+<p>啰嗦这么多就是想说：这就是正向创建对象的过程，加载Class类信息的操作由JVM完成，对应用程序是透明的。那什么是反射呢？个人理解就是应用程序手动来完成原本JVM自动完成的那些操作。</p>
+<p>下面看一个例子</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">User user = <span class="keyword">new</span> User();</span><br><span class="line">Class c1 = User.class;</span><br><span class="line">Class c2 = user.getClass();</span><br><span class="line">Class c3 = Class.forName(<span class="string">"org.test.User"</span>);</span><br><span class="line">System.out.println(c1.hashCode());</span><br><span class="line">System.out.println(c2.hashCode());</span><br><span class="line">System.out.println(c3.hashCode());</span><br></pre></td></tr></table></figure>
+<p>运行后返回的hashCode是一样的，说明三个Class类对象是一个对象。也就是说：使用反射方法得到的类对象c3和JVM正常加载User类得到的c1和c2都指向同一个类对象。</p>
+<h4 id="动态加载"><a href="#动态加载" class="headerlink" title="动态加载"></a>动态加载</h4><p>还是上面的例子，c1和c2在编译时就需要加载User类，这称为静态加载。c3在编译时不需要加载User类，在运行时加载User类，这称为动态加载。从类加载的角度说，反射最重要的特性就是实现了运行时类的动态加载。</p>
+<blockquote>
+<p>TODO：以上挪到JVM-类加载器中</p>
+</blockquote>
+<h3 id="反射的使用"><a href="#反射的使用" class="headerlink" title="反射的使用"></a>反射的使用</h3><p>简单说，反射机制就是Java为应用程序提供了在程序运行期间获取类对象并对其进行操作的能力。</p>
+<p>反射主要涉及到以下几个类：Class、Method、Field。</p>
+<h4 id="Class"><a href="#Class" class="headerlink" title="Class"></a>Class</h4><p>得到类对象信息后我们就可以动态创建类实例对象了，常见有两种方法。</p>
+<p><strong>Class.newInstance()</strong></p>
+<ul>
+<li>newInstance()相当于执行不带参数的默认构造函数</li>
+<li>User类可以不声明任何构造函数，也可以声明默认构造函数<code>public User() {}</code>，但是不能只声明带参数的构造函数；例如：如果声明<code>public User(String name)</code> ，那么newInstance()找不到合适的构造函数将抛出异常</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> org.test;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> String name;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Class clazz = Class.forName(<span class="string">"org.test.User"</span>);</span><br><span class="line">User user = (User) clazz.newInstance();</span><br></pre></td></tr></table></figure>
+<p><strong>Constructor.newInstance()</strong></p>
+<p>上面的方法是不能带参数的，如果需要执行带参数的构造函数，需要调用Constructor.newInstance()</p>
+<ul>
+<li>先调用Class类的getConstructor()方法获取构造函数Constructor</li>
+<li>然后再调用Constructor类的newInstance()方法并传入参数</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> org.test;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> String name;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">User</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.name = name;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Class clazz = Class.forName(<span class="string">"org.test.User"</span>);</span><br><span class="line">Constructor constructor = clazz.getConstructor(String.class);</span><br><span class="line">User user = (User) constructor.newInstance(<span class="string">"test"</span>);</span><br></pre></td></tr></table></figure>
+<p>上面例子中如果User类构造函数声明为private，那么getConstructor()时将抛出NoSuchMethodException异常，怎么办？可以将getConstructor()替换为getDeclaredConstructor()，前者只能获取到public的构造函数，后者可以获取到User类声明的所有构造函数。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Class clazz = Class.forName(<span class="string">"org.test.User"</span>);</span><br><span class="line">Constructor constructor = clazz.getDeclaredConstructor(String.class);</span><br><span class="line">User user = (User) constructor.newInstance(<span class="string">"test"</span>);</span><br></pre></td></tr></table></figure>
+<p>运行之后发现还不行，抛出IllegalAccessException异常，怎么办？通过getDeclaredConstructor()我们可以得到私有构造方法了，但是没有private方法的执行权限，需要调用setAccessible()方法设置权限。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Class clazz = Class.forName(<span class="string">"org.test.User"</span>);</span><br><span class="line">Constructor constructor = clazz.getDeclaredConstructor(String.class);</span><br><span class="line">constructor.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">User user = (User) constructor.newInstance(<span class="string">"test"</span>);</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>getXXX()可以获得public的方法，包括继承的方法；getDeclaredXXX()可以获得所有方法，但是只能获得自己声明的方法，不能获得继承的方法。</p>
+</blockquote>
+<h4 id="Method"><a href="#Method" class="headerlink" title="Method"></a>Method</h4><p>从Class中可以获取类的成员方法Method，调用Method类的invoke()方法可以执行成员方法。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> org.test;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> String name;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> name;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.name = name;</span><br><span class="line">  &#125;  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Class clazz = Class.forName(<span class="string">"org.test.User"</span>);</span><br><span class="line">Constructor constructor = clazz.getDeclaredConstructor();</span><br><span class="line">constructor.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">User user = (User) constructor.newInstance();</span><br><span class="line">Method method = clazz.getMethod(<span class="string">"setName"</span>, String.class);</span><br><span class="line">method.invoke(user, <span class="string">"test"</span>);</span><br><span class="line">method = clazz.getMethod(<span class="string">"getName"</span>, <span class="keyword">null</span>);</span><br><span class="line">String name = (String) method.invoke(user);</span><br></pre></td></tr></table></figure>
+<p>同样的，如果需要访问私有方法，可以将getMethod()替换为getDeclaredMethod()并在执行invoke()方法前setAccessible(true)。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Method method = clazz.getDeclaredMethod(<span class="string">"setName"</span>, String.class);</span><br><span class="line">method.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">method.invoke(user, <span class="string">"test"</span>);</span><br></pre></td></tr></table></figure>
+<h4 id="Field"><a href="#Field" class="headerlink" title="Field"></a>Field</h4><p>从Class中可以获取类的成员变量Field，调用Field类的get()和set()方法可以访问成员变量。通过Field即使没有提供get()和set()方法，我们也可以直接访问User类的私有成员变量name进行赋值。</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> org.test;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> String name;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">clazz = Class.forName(<span class="string">"org.test.User"</span>);</span><br><span class="line">Constructor constructor = clazz.getDeclaredConstructor();</span><br><span class="line">constructor.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">User user = (User) constructor.newInstance();</span><br><span class="line">Field field = clazz.getDeclaredField(<span class="string">"name"</span>);</span><br><span class="line">field.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">field.set(user, <span class="string">"test"</span>);</span><br><span class="line">String name = (String) field.get(user);</span><br></pre></td></tr></table></figure>
+<h4 id="PropertyDescriptor"><a href="#PropertyDescriptor" class="headerlink" title="PropertyDescriptor"></a>PropertyDescriptor</h4><p>由于通常我们使用的Bean对象都会定义get()和set()方法，Java为我们提供了PropertyDescriptor类来简化操作。</p>
+<ul>
+<li><code>new PropertyDescriptor()</code> 时传入属性名称；</li>
+<li><code>getReadMethod();</code> 返回get()方法； <code>getWriteMethod();</code> 返回set()方法。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">PropertyDescriptor descriptor = <span class="keyword">new</span> PropertyDescriptor(<span class="string">"name"</span>, clazz);</span><br><span class="line">Method method = descriptor.getWriteMethod();</span><br><span class="line">method.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">method.invoke(user, <span class="string">"test"</span>);</span><br><span class="line">String name = (String)descriptor.getReadMethod().invoke(user);</span><br><span class="line">System.out.println(name);</span><br></pre></td></tr></table></figure>
+<h3 id="反射包"><a href="#反射包" class="headerlink" title="反射包"></a>反射包</h3><p>最后，我们罗列一下反射相关的重要类和方法。</p>
+<h4 id="java-lang-Class"><a href="#java-lang-Class" class="headerlink" title="java.lang.Class"></a>java.lang.Class</h4><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>forName()</td>
+<td>动态加载类并返回类对象</td>
+</tr>
+<tr>
+<td>getName()</td>
+<td>获取类的名字</td>
+</tr>
+<tr>
+<td>getSuperclass()</td>
+<td>获取基类</td>
+</tr>
+<tr>
+<td>getInterfaces()</td>
+<td>获取类实例对象实现的接口类</td>
+</tr>
+<tr>
+<td>getConstructors()</td>
+<td>获取所有公有构造函数，包括父类的构造函数</td>
+</tr>
+<tr>
+<td>getMethods()</td>
+<td>获取所有公有成员方法，包括父类的成员方法</td>
+</tr>
+<tr>
+<td>getFields()</td>
+<td>获取所有公有成员变量，包括父类的成员变量</td>
+</tr>
+<tr>
+<td>getDeclaredConstructors()</td>
+<td>获取所有构造函数，不包括父类的构造函数</td>
+</tr>
+<tr>
+<td>getDeclaredMethods()</td>
+<td>获取所有成员方法，不包括父类的成员方法</td>
+</tr>
+<tr>
+<td>getDeclaredFields()</td>
+<td>获取所有成员变量，不包括父类的成员变量</td>
+</tr>
+<tr>
+<td>getConstructor()</td>
+<td>获取指定公有构造函数，包括父类的构造函数</td>
+</tr>
+<tr>
+<td>getMethod()</td>
+<td>获取指定公有成员方法，包括父类的成员方法</td>
+</tr>
+<tr>
+<td>getField()</td>
+<td>获取指定公有成员变量，包括父类的成员变量</td>
+</tr>
+<tr>
+<td>getDeclaredConstructor()</td>
+<td>获取指定构造函数，不包括父类的构造函数</td>
+</tr>
+<tr>
+<td>getDeclaredMethod()</td>
+<td>获取指定成员方法，不包括父类的成员方法</td>
+</tr>
+<tr>
+<td>getDeclaredField()</td>
+<td>获取指定成员变量，不包括父类的成员变量</td>
+</tr>
+<tr>
+<td>isAnnotationPresent()</td>
+<td>类上是否声明了指定注解</td>
+</tr>
+<tr>
+<td>getAnnotations()</td>
+<td>获取类上声明的所有注解</td>
+</tr>
+<tr>
+<td>getAnnotation()</td>
+<td>获取类上声明的指定注解</td>
+</tr>
+<tr>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="java-lang-reflect-Constructor"><a href="#java-lang-reflect-Constructor" class="headerlink" title="java.lang.reflect.Constructor"></a>java.lang.reflect.Constructor</h4><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>T newInstance(Object … initargs)</td>
+<td>执行构造函数创建类的实例对象</td>
+</tr>
+<tr>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="java-lang-reflect-Method"><a href="#java-lang-reflect-Method" class="headerlink" title="java.lang.reflect.Method"></a>java.lang.reflect.Method</h4><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Object invoke(Object obj, Object… args)</td>
+<td>执行方法，传入类实例对象和参数</td>
+</tr>
+<tr>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="java-lang-reflect-Field"><a href="#java-lang-reflect-Field" class="headerlink" title="java.lang.reflect.Field"></a>java.lang.reflect.Field</h4><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Object get(Object obj)</td>
+<td>读取属性值，传入类实例对象</td>
+</tr>
+<tr>
+<td>void set(Object obj, Object value)</td>
+<td>设置属性值，传入类实例对象和新值</td>
+</tr>
+<tr>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h4 id="java-lang-reflect-InvocationHandler"><a href="#java-lang-reflect-InvocationHandler" class="headerlink" title="java.lang.reflect.InvocationHandler"></a>java.lang.reflect.InvocationHandler</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">InvocationHandler</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 执行代理方法的入口</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="java-lang-reflect-Proxy"><a href="#java-lang-reflect-Proxy" class="headerlink" title="java.lang.reflect.Proxy"></a>java.lang.reflect.Proxy</h4><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Proxy</span> <span class="keyword">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span> </span>&#123;</span><br><span class="line">  <span class="comment">// 动态生成代理类实例对象</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Object <span class="title">newProxyInstance</span><span class="params">(ClassLoader loader, Class&lt;?&gt;[] interfaces,</span></span></span><br><span class="line"><span class="function"><span class="params">                                        InvocationHandler h)</span> </span>&#123;</span><br><span class="line">  &#125;     </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</div><div class="tags"><a href="/tags/Java/">Java</a><a href="/tags/反射/">反射</a></div><div class="post-nav"><a class="pre" href="/2018/05/28/java-basic-annotation/">Java基础-注解</a><a class="next" href="/2018/05/27/spring-aop/">Spring-AOP</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"/><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/JAVA/">JAVA</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/SpringBoot/">SpringBoot</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/WEB/">WEB</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/分布式/">分布式</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/工具/">工具</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/并发编程/">并发编程</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/设计模式/">设计模式</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/Java/" style="font-size: 15px;">Java</a> <a href="/tags/mq/" style="font-size: 15px;">mq</a> <a href="/tags/hexo/" style="font-size: 15px;">hexo</a> <a href="/tags/github/" style="font-size: 15px;">github</a> <a href="/tags/并发/" style="font-size: 15px;">并发</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/线程池/" style="font-size: 15px;">线程池</a> <a href="/tags/任务调度/" style="font-size: 15px;">任务调度</a> <a href="/tags/排队策略/" style="font-size: 15px;">排队策略</a> <a href="/tags/饱和策略/" style="font-size: 15px;">饱和策略</a> <a href="/tags/多线程/" style="font-size: 15px;">多线程</a> <a href="/tags/synchronized/" style="font-size: 15px;">synchronized</a> <a href="/tags/wait/" style="font-size: 15px;">wait</a> <a href="/tags/notify/" style="font-size: 15px;">notify</a> <a href="/tags/单例/" style="font-size: 15px;">单例</a> <a href="/tags/线程安全/" style="font-size: 15px;">线程安全</a> <a href="/tags/Database/" style="font-size: 15px;">Database</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/Sharding/" style="font-size: 15px;">Sharding</a> <a href="/tags/分布式/" style="font-size: 15px;">分布式</a> <a href="/tags/SnowFlake/" style="font-size: 15px;">SnowFlake</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/rocketmq/" style="font-size: 15px;">rocketmq</a> <a href="/tags/Hashmap/" style="font-size: 15px;">Hashmap</a> <a href="/tags/哈希冲突/" style="font-size: 15px;">哈希冲突</a> <a href="/tags/WEB/" style="font-size: 15px;">WEB</a> <a href="/tags/短地址/" style="font-size: 15px;">短地址</a> <a href="/tags/哈希/" style="font-size: 15px;">哈希</a> <a href="/tags/hashCode/" style="font-size: 15px;">hashCode</a> <a href="/tags/mybatis/" style="font-size: 15px;">mybatis</a> <a href="/tags/springboot/" style="font-size: 15px;">springboot</a> <a href="/tags/ConcurrentHashMap/" style="font-size: 15px;">ConcurrentHashMap</a> <a href="/tags/Reentrantlock/" style="font-size: 15px;">Reentrantlock</a> <a href="/tags/SpringBoot/" style="font-size: 15px;">SpringBoot</a> <a href="/tags/热部署/" style="font-size: 15px;">热部署</a> <a href="/tags/Spring/" style="font-size: 15px;">Spring</a> <a href="/tags/IoC/" style="font-size: 15px;">IoC</a> <a href="/tags/注解/" style="font-size: 15px;">注解</a> <a href="/tags/反射/" style="font-size: 15px;">反射</a> <a href="/tags/动态代理/" style="font-size: 15px;">动态代理</a> <a href="/tags/泛型/" style="font-size: 15px;">泛型</a> <a href="/tags/内存模型/" style="font-size: 15px;">内存模型</a> <a href="/tags/内存可见性/" style="font-size: 15px;">内存可见性</a> <a href="/tags/指令重排序/" style="font-size: 15px;">指令重排序</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/05/29/java-basic-generic/">Java基础-泛型</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/28/java-basic-proxy/">Java基础-动态代理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/28/java-basic-annotation/">Java基础-注解</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/28/java-basic-reflect/">Java基础-反射</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/27/spring-aop/">Spring-AOP</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/22/spring-ioc/">Spring-IoC</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/21/knowledge-thread/">【置顶】Java多线程一篇就够</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/18/springboot-devtool-deploy/">SpringBoot热部署</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/17/thread-java-concurrent-sourcecode/">并行包源码分析</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/16/thread-basic-java-concurrent/">Java并行包</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://github.com/waterlu" title="waterlu's github" target="_blank">waterlu's github</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2018 <a href="/." rel="nofollow">Waterlu's Blog.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
