@@ -1,0 +1,115 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="个人技术博客"><title>GitFlow | Waterlu's Blog</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/normalize/8.0.0/normalize.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">GitFlow</h1><a id="logo" href="/.">Waterlu's Blog</a><p class="description">以铜为鉴，可正衣冠；以史为鉴，可知兴替；以人为鉴，可明得失。</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">GitFlow</h1><div class="post-meta">Jun 8, 2018<span> | </span><span class="category"><a href="/categories/工具/">工具</a></span><script src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><a class="disqus-comment-count" href="/2018/06/08/tool-gitflow/#vcomment"><span class="valine-comment-count" data-xid="/2018/06/08/tool-gitflow/"></span><span> 条评论</span></a><div class="clear"><div class="toc-article" id="toc"><div class="toc-title">文章目录</div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Git分支管理"><span class="toc-number">1.</span> <span class="toc-text">Git分支管理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Github-Flow"><span class="toc-number">1.1.</span> <span class="toc-text">Github Flow</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Git-Flow"><span class="toc-number">1.2.</span> <span class="toc-text">Git Flow</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#我的实战"><span class="toc-number">1.3.</span> <span class="toc-text">我的实战</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#对比"><span class="toc-number">1.4.</span> <span class="toc-text">对比</span></a></li></ol></li></ol></div></div><div class="post-content"><h2 id="Git分支管理"><a href="#Git分支管理" class="headerlink" title="Git分支管理"></a>Git分支管理</h2><p>聊一下Git分支管理的策略，常见的有两种：Git Flow和GitHub Flow。</p>
+<h3 id="Github-Flow"><a href="#Github-Flow" class="headerlink" title="Github Flow"></a>Github Flow</h3><p>我们先从简单一点的Github Flow开始。</p>
+<p><img src="/images/github-flow.png" alt=""></p>
+<p>Github Flow顾名思义是用在github上的：</p>
+<ul>
+<li>首先有一个主分支，就是master分支，master分支是用来部署的，不可以在master分支上直接提交代码；</li>
+<li>每当需要修改或增加新功能时，开设新的分支，可以叫feature分支，也可以叫做其他分支，总之是开设新的branch进行开发；</li>
+<li>开发完成后发起Pull Request操作，申请将feature分支合并到master上；</li>
+<li>评审并接受Pull Request后，feature分支的代码就被merge到了master上，如果有冲突就解决。</li>
+</ul>
+<p>Github Flow的好处是足够简单，只有一个固定的master分支。Github Flow适合发布频率非常高的场景，比如一周上线几十次，甚至一天上线几十次的情况。</p>
+<h3 id="Git-Flow"><a href="#Git-Flow" class="headerlink" title="Git Flow"></a>Git Flow</h3><p>Git Flow远比Github Flow复杂，我们先看一下下面的示例图。</p>
+<p><img src="/images/git-flow.png" alt=""></p>
+<ul>
+<li>首先，有两个固定的主分支master分支和dev分支：其中master分支用来部署生产环境，master分支的代码和生产环境代码一致；dev分支用来开发，dev分支上保存最新的开发代码；</li>
+<li>为避免多人同时在dev分支开发产生干扰，dev分支和master分支一样，都不可以直接在上面提交代码；</li>
+<li>从dev分支开设feature分支进行新功能的开发，开发完成后将feature分支merge到dev分支上；注意，feature分支的代码还没有经过测试，dev分支上的代码不是稳定代码；</li>
+<li>当需要测试时，从dev分支开设release分支进行提测，改bug在release分支上进行；</li>
+<li>测试通过，将release分支merge到master分支，部署生成环境；将release分支merge到dev分支，保证dev分支代码的稳定；</li>
+<li>当需要紧急修改线上代码时，从master分支开设hotfix分支，开发、测试，测试通过后合并到master分支。</li>
+</ul>
+<p>Git Flow的主要思想：</p>
+<ul>
+<li>两个固定分支master和dev一直存在，三个临时性分支feature、release和hotfix，使用完后可删除；</li>
+<li>新功能代码在feature分支上开发，在release分支上测试、改bug，合并到master分支上线。</li>
+</ul>
+<p>Git Flow的敏捷流程：</p>
+<ul>
+<li>一个冲刺开始，先划分需要开发几个功能，为每个功能从dev分支开设feature分支，可能一个开发人员对应多个feature分支，也可能多个开发人员对应一个feature分支；开发人员在feature分支上开发代码；</li>
+<li>完成一个功能后，就把这个功能的feature分支合并到dev分支上进行开发联调；</li>
+<li>这个Sprint全部功能都完成后，从dev分支开设release分支，将release分支代码部署到测试环境进行测试，测试过程中发现的bug直接在release分支上改代码（dev分支上还是旧代码）；</li>
+<li>测试通过后将release分支同时合并到master分支和dev分支。</li>
+</ul>
+<h3 id="我的实战"><a href="#我的实战" class="headerlink" title="我的实战"></a>我的实战</h3><p>最后说一下我的敏捷开发实战，实战中我使用的是修改过的Git Flow，先说说Git Flow不满足我们要求的地方。</p>
+<ol>
+<li>测试分支是动态的，测试环境部署哪个分支的代码成了让人头疼的问题。实战中存在这样的情况：release1正在测试中，release2又提测了，一套测试环境，两套代码，就意味需要不停切换分支进行测试，非常乱，也非常容易出错。或许你会说，准备两套测试环境不就行了，那如果release3也要同时测试呢？总不能几个分支同时测试我就需要准备几套测试环境吧，成本上考虑肯定不允许。</li>
+<li>开发联调的问题，feature分支开发完成后合并到dev分支后，需要进行前后端联调，由于feature分支是非经过测试的，难免问题很多，而dev分支又不允许修改代码，其结果就是反复把feature分支merge到dev分支。</li>
+</ol>
+<p>下面说一下我的实战：</p>
+<ul>
+<li>我们有三个固定分支：master分支、dev分支和test分支，四套环境：生产环境、准生产环境、测试环境和开发联调环境；生产环境和准生产环境部署master分支的代码，测试环境部署test分支的代码，开发联调环境部署dev分支的代码；和Git Flow一样，master分支、dev分支和test分支都不允许直接修改；和Git Flow最大的区别是我们增加了固定的test分支，这样可以保证时刻我们的测试环境都有源可寻；</li>
+<li>一个冲刺开始，从master分支开设sprint分支（相当于feature分支），以后一直在sprint分支上写代码，当需要开发联调时，把sprint分支合并到dev分支，当需要测试时，把sprint分支合并到test分支，当需要上线时，把sprint分支合并到master分支；</li>
+<li>如果多个冲刺同时进行，那么test分支上可能合并了多个sprint分支的代码，但是上线时这些sprint分支可能不是一起上线的，这就可能产生隐藏依赖的问题（例如：sprint1上的某个问题在sprint2上被改好了，test分支合并了sprint1和sprint2，测试是没有问题的，但是sprint1先单独上线就存在这个问题）；所以，为了保证上线的安全，我们增加了准生产环境，准生产环境部署master分支的代码，提前进行验证；</li>
+<li>hotfix分支的用法和Git Flow基本一样，区别在于hotfix分支也是先合并到test分支进行测试，验证无误后合并到master分支，部署到准生产环境在此验证，如果发现问题再次重复合并test分支和master分支的过程。</li>
+</ul>
+<h3 id="对比"><a href="#对比" class="headerlink" title="对比"></a>对比</h3><p>最后再来对比一下：</p>
+<ul>
+<li>Git Flow认为dev分支是主分支，dev分支就是最新的代码，需要上线时开设release分支进行测试，测试通过后把这部分代码合并到master分支，master分支基本上就是tag分支；</li>
+<li>我的定制Git Flow认为master分支是主分支，每次需要上线新功能就开设sprint分支（feature分支），dev分支和test分支其实是临时分支，它们分别表示开发联调环境和测试环境下最新的代码；所有代码都在sprint分支上新增和修改，最后合并到master分支上线生效。</li>
+</ul>
+<blockquote>
+<p>Git Flow中代码先在feature分支上开发，然后又在release分支上改Bug，我认为太分散，不好；功能都在sprint(feature)分支上开发，虽然改Bug需要合并到test分支有点麻烦，但是如果我需要看一个功能都改了哪些代码，只需要查看sprint分支即可，一目了然。</p>
+</blockquote>
+<p><strong>Git Flow</strong></p>
+<p><img src="/images/git-flow-visio.png" alt=""></p>
+<ol>
+<li>从master分支开设dev分支；</li>
+<li>从dev分支开设feature1分支，开始新功能1的开发；</li>
+<li>从dev分支开设feature2分支，开始新功能2的开发；</li>
+<li>新功能2代码开发完成，合并到dev分支；</li>
+<li>从dev分支开设release分支，测试功能2的代码；</li>
+<li>功能2的代码测试通过，将release分支合并到master分支和dev分支；</li>
+<li>新功能1代码开发完成，合并到dev分支；</li>
+<li>从dev分支开设release分支，测试功能1的代码；</li>
+<li>功能1的代码测试通过，将release分支合并到master分支和dev分支；</li>
+</ol>
+<p><strong>我的实战</strong></p>
+<p><img src="/images/git-flow-me.png" alt=""></p>
+<ol>
+<li>从master分支开设sprint1分支，开始冲刺1的功能开发；</li>
+<li>从master分支开设sprint2分支，开始冲刺2的功能开发；</li>
+<li>冲刺2的功能代码开发完成，从sprint2分支合并到dev分支进行前后端联调，联调过程发现问题修改sprint2分支的代码重新合并到dev分支；</li>
+<li>前后端联调完成后，冲刺2的功能提交测试，从sprint2分支合并到test分支进行测试；</li>
+<li>冲刺2修改测试过程中发现的问题，重新从sprint2分支合并代码到test分支；</li>
+<li>冲刺2测试通过，合并代码到master分支上线；</li>
+<li>冲刺1的功能代码开发完成，从sprint1分支合并到dev分支进行前后端联调；</li>
+<li>冲刺1前后端联调完成，从sprint1分支合并到test分支进行测试；</li>
+<li>冲刺1测试通过，合并代码到master分支上线；</li>
+</ol>
+<p>从两个图中也能看出端倪：</p>
+<ul>
+<li><p>Git Flow中有数字的节点很分散，也就是说我们经常要操作不同的分支，我感觉还是太复杂；</p>
+</li>
+<li><p>我定制的Git Flow中有数字的节点基本都集中在sprint分支，也就是说开发人员主要聚焦于sprint分支，个人感觉会更清晰一些；</p>
+</li>
+</ul>
+<p>本质上两个流程最大的区别是release分支和test分支的区别。</p>
+<p>开release分支的好处：可以直接release分支上改bug，很方便；</p>
+<p>开release分支的不足：我认为这种模式下release分支需要快速测试完成，例如1-2天测试完成一个release分支马上上线，然后再测试下一个relase分支；假如release分支需要测试一周甚至更长时间，那么我们很难保证在测试这个release分支时有其他测试任务插入进来，这样就需要频繁切换测试环境的分支，容易造成混乱和错误。例如：线上发现问题需要hotfix，改完代码怎么办？需要把测试环境从release分支切换到hotfix分支进行测试，等hotfix上线后再切回到release分支。如果一个release分支还没有测试完成，又有一个release分支提测怎么半？要么第二个得等到第一个测试完成，要么在两个分支之间切换，都不好。</p>
+<p>开test分支的好处：测试环境固定对应test分支，可以保证测试环境的稳定；</p>
+<p>开test分支的不足：(1)改bug麻烦，每次修改代码都需要从sprint分支合并到test分支进行测试；(2)test环境同时共存的多个分支可能产生依赖问题，为保证单个sprint分支上线没有问题，需要引入准生产环境进行验证。</p>
+</div><div class="tags"><a href="/tags/Git/">Git</a></div><div class="post-nav"><a class="pre" href="/2018/07/09/notebook-mysql-inside-innodb-engine/">读书笔记-MySQL技术内幕（1）</a><a class="next" href="/2018/06/07/springcloud-ribbon/">Spring Cloud - Ribbon</a></div><div id="vcomment"></div><script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script><script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script><script>var notify = 'false' == true ? true : false;
+var verify = 'false' == true ? true : false;
+var GUEST_INFO = ['nick','mail','link'];
+var guest_info = 'nick,mail'.split(',').filter(function(item){
+  return GUEST_INFO.indexOf(item) > -1
+});
+guest_info = guest_info.length == 0 ? GUEST_INFO :guest_info;
+window.valine = new Valine({
+  el:'#vcomment',
+  notify:notify,
+  verify:verify,
+  appId:'5mrT8f80zgJVcJvIPrSGzFjV-gzGzoHsz',
+  appKey:'Db9rWWROewfegKQJkbYncKt1',
+  placeholder:'请在这里留下你要说的话',
+  avatar:'mm',
+  guest_info:guest_info,
+  pageSize:'10'
+})</script></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"/><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/JAVA/">JAVA</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/WEB/">WEB</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/分布式/">分布式</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/工具/">工具</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/并发编程/">并发编程</a><span class="category-list-count">12</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/数据库/">数据库</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/消息队列/">消息队列</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/设计模式/">设计模式</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/hashCode/" style="font-size: 15px;">hashCode</a> <a href="/tags/mq/" style="font-size: 15px;">mq</a> <a href="/tags/并发/" style="font-size: 15px;">并发</a> <a href="/tags/线程/" style="font-size: 15px;">线程</a> <a href="/tags/线程池/" style="font-size: 15px;">线程池</a> <a href="/tags/任务调度/" style="font-size: 15px;">任务调度</a> <a href="/tags/排队策略/" style="font-size: 15px;">排队策略</a> <a href="/tags/饱和策略/" style="font-size: 15px;">饱和策略</a> <a href="/tags/hexo/" style="font-size: 15px;">hexo</a> <a href="/tags/github/" style="font-size: 15px;">github</a> <a href="/tags/多线程/" style="font-size: 15px;">多线程</a> <a href="/tags/synchronized/" style="font-size: 15px;">synchronized</a> <a href="/tags/wait/" style="font-size: 15px;">wait</a> <a href="/tags/notify/" style="font-size: 15px;">notify</a> <a href="/tags/单例/" style="font-size: 15px;">单例</a> <a href="/tags/线程安全/" style="font-size: 15px;">线程安全</a> <a href="/tags/Database/" style="font-size: 15px;">Database</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/Sharding/" style="font-size: 15px;">Sharding</a> <a href="/tags/分布式/" style="font-size: 15px;">分布式</a> <a href="/tags/SnowFlake/" style="font-size: 15px;">SnowFlake</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/mybatis/" style="font-size: 15px;">mybatis</a> <a href="/tags/WEB/" style="font-size: 15px;">WEB</a> <a href="/tags/短地址/" style="font-size: 15px;">短地址</a> <a href="/tags/哈希/" style="font-size: 15px;">哈希</a> <a href="/tags/rocketmq/" style="font-size: 15px;">rocketmq</a> <a href="/tags/springboot/" style="font-size: 15px;">springboot</a> <a href="/tags/Java/" style="font-size: 15px;">Java</a> <a href="/tags/Hashmap/" style="font-size: 15px;">Hashmap</a> <a href="/tags/哈希冲突/" style="font-size: 15px;">哈希冲突</a> <a href="/tags/SpringBoot/" style="font-size: 15px;">SpringBoot</a> <a href="/tags/热部署/" style="font-size: 15px;">热部署</a> <a href="/tags/Reentrantlock/" style="font-size: 15px;">Reentrantlock</a> <a href="/tags/内存模型/" style="font-size: 15px;">内存模型</a> <a href="/tags/内存可见性/" style="font-size: 15px;">内存可见性</a> <a href="/tags/指令重排序/" style="font-size: 15px;">指令重排序</a> <a href="/tags/ConcurrentHashMap/" style="font-size: 15px;">ConcurrentHashMap</a> <a href="/tags/注解/" style="font-size: 15px;">注解</a> <a href="/tags/Spring/" style="font-size: 15px;">Spring</a> <a href="/tags/AOP/" style="font-size: 15px;">AOP</a> <a href="/tags/动态代理/" style="font-size: 15px;">动态代理</a> <a href="/tags/IoC/" style="font-size: 15px;">IoC</a> <a href="/tags/Spring-Cloud/" style="font-size: 15px;">Spring Cloud</a> <a href="/tags/Eureka/" style="font-size: 15px;">Eureka</a> <a href="/tags/服务治理/" style="font-size: 15px;">服务治理</a> <a href="/tags/反射/" style="font-size: 15px;">反射</a> <a href="/tags/Ribbon/" style="font-size: 15px;">Ribbon</a> <a href="/tags/泛型/" style="font-size: 15px;">泛型</a> <a href="/tags/Mybatis/" style="font-size: 15px;">Mybatis</a> <a href="/tags/InnoDB/" style="font-size: 15px;">InnoDB</a> <a href="/tags/Git/" style="font-size: 15px;">Git</a> <a href="/tags/算法/" style="font-size: 15px;">算法</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/08/27/algorithm-basic/">算法-常见算法</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/09/notebook-mysql-inside-innodb-engine/">读书笔记-MySQL技术内幕（1）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/06/08/tool-gitflow/">GitFlow</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/06/07/springcloud-ribbon/">Spring Cloud - Ribbon</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/06/06/springcloud-eureka/">Spring Cloud - Eureka</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/06/05/spring-ioc-inside/">Spring-IoC原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/06/04/spring-ioc-advanced/">Spring-IoC进阶</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/31/mybatis-aop/">Mybatis动态代理原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/29/java-basic-generic/">Java基础-泛型</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/28/java-basic-proxy/">Java基础-动态代理</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://github.com/waterlu" title="waterlu's github" target="_blank">waterlu's github</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2018 <a href="/." rel="nofollow">Waterlu's Blog.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/3.2.5/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
